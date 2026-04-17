@@ -179,8 +179,25 @@ export default function Verify({ apiUrl }) {
 
             {/* Actions */}
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
-              <button className="btn btn-primary" onClick={() => navigate(`/report/${report.id}`)}>View Full Report</button>
-              <button className="btn btn-secondary" onClick={() => navigate('/invoice')}>Create Invoice →</button>
+              <button id="pay-report-btn" className="btn btn-primary" onClick={async () => {
+                try {
+                  const res = await fetch(`${apiUrl}/api/checkout/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      reportId: report.id,
+                      amount: report.costBreakdown?.total || 1.00,
+                      description: `Trust Report: ${report.target}`,
+                    }),
+                  })
+                  const session = await res.json()
+                  if (session.id) navigate(`/checkout/${session.id}`)
+                } catch (err) { console.error(err) }
+              }}>
+                Pay ${(report.costBreakdown?.total || 1.00).toFixed(2)} USDC →
+              </button>
+              <button className="btn btn-secondary" onClick={() => navigate(`/report/${report.id}`)}>View Report</button>
+              <button className="btn btn-secondary" onClick={() => navigate('/invoice')}>Create Invoice</button>
             </div>
           </div>
         )}

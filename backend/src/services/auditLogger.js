@@ -51,4 +51,23 @@ function getTrail(reportId) {
   return auditStore.get(reportId) || null;
 }
 
-module.exports = { createAuditTrail, logEntry, finalizeTrail, getTrail };
+/**
+ * Standalone log for system-level actions (checkout, invoice, etc.)
+ */
+const systemLog = [];
+function log(entry) {
+  systemLog.push({
+    timestamp: new Date().toISOString(),
+    action: entry.action,
+    provider: entry.provider || 'ClearGate',
+    costUsdc: entry.costUsdc || 0,
+    reasoning: entry.reasoning || '',
+  });
+  console.log(`[AUDIT] ${entry.action} | ${entry.provider || 'ClearGate'} | $${entry.costUsdc || 0}`);
+}
+
+function getSystemLog() {
+  return systemLog;
+}
+
+module.exports = { createAuditTrail, logEntry, finalizeTrail, getTrail, log, getSystemLog };

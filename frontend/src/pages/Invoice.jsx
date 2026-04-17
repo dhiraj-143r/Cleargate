@@ -1,9 +1,12 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 
 export default function Invoice({ apiUrl }) {
   const [form, setForm] = useState({ description: '', amount: '', clientName: '', clientEmail: '', freelancerName: '' })
   const [invoice, setInvoice] = useState(null)
   const [loading, setLoading] = useState(false)
+  const [paying, setPaying] = useState(false)
+  const navigate = useNavigate()
 
   const handleGenerate = async (e) => {
     e.preventDefault(); setLoading(true)
@@ -15,6 +18,25 @@ export default function Invoice({ apiUrl }) {
       setInvoice(await res.json())
     } catch (err) { console.error(err) }
     finally { setLoading(false) }
+  }
+
+  const handlePay = async () => {
+    if (!invoice) return
+    setPaying(true)
+    try {
+      const res = await fetch(`${apiUrl}/api/invoice/${invoice.id}/pay`, {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          successUrl: `${window.location.origin}/dashboard`,
+          cancelUrl: `${window.location.origin}/invoice`,
+        }),
+      })
+      const data = await res.json()
+      if (data.checkout?.sessionId) {
+        navigate(`/checkout/${data.checkout.sessionId}`)
+      }
+    } catch (err) { console.error(err) }
+    finally { setPaying(false) }
   }
 
   const u = (f) => (e) => setForm({ ...form, [f]: e.target.value })
@@ -68,7 +90,10 @@ export default function Invoice({ apiUrl }) {
           <div>
             {!invoice && !loading && (
               <div className="card" style={{ height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <span className="body" style={{ color: 'var(--text-muted)' }}>Invoice preview appears here</span>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: '2rem', marginBottom: '12px', opacity: '0.3' }}>📄</div>
+                  <span className="body" style={{ color: 'var(--text-muted)' }}>Invoice preview appears here</span>
+                </div>
               </div>
             )}
 
@@ -83,14 +108,16 @@ export default function Invoice({ apiUrl }) {
 
             {invoice && (
               <div className="card fade-in" style={{ borderColor: 'var(--accent-border)' }}>
+                {/* Header */}
                 <div className="flex justify-between items-center mb-24">
                   <div>
                     <h3 className="heading-md" style={{ color: 'var(--accent)' }}>INVOICE</h3>
                     <span className="body-sm">{invoice.invoiceNumber}</span>
                   </div>
-                  <span className="badge badge-info">DRAFT</span>
+                  <span className="badge badge-info">{invoice.status}</span>
                 </div>
 
+                {/* Parties */}
                 <div className="grid-2 mb-24">
                   <div>
                     <span className="mono" style={{ fontSize: '0.625rem' }}>FROM</span>
@@ -100,33 +127,69 @@ export default function Invoice({ apiUrl }) {
                   <div>
                     <span className="mono" style={{ fontSize: '0.625rem' }}>TO</span>
                     <div className="body mt-4" style={{ color: 'var(--text)', fontWeight: '500' }}>{invoice.to.name}</div>
-                    <div className="body-sm">{invoice.to.email}</div>
+                    {invoice.to.email && <div className="body-sm">{invoice.to.email}</div>}
                   </div>
                 </div>
 
                 <hr className="divider" />
 
+                {/* Line Items */}
                 {invoice.lineItems?.map((item, i) => (
                   <div key={i} className="flex justify-between mb-8">
-                    <span className="body">{item.description}</span>
-                    <span className="body" style={{ color: 'var(--text)', fontWeight: '500' }}>${item.total.toFixed(2)}</span>
+                    <div style={{ flex: 1 }}>
+                      <span className="body" style={{ color: 'var(--text)' }}>{item.description}</span>
+                      {item.quantity > 1 && <span className="body-sm"> × {item.quantity}</span>}
+                    </div>
+                    <span className="body" style={{ color: 'var(--text)', fontWeight: '500', flexShrink: 0, marginLeft: '16px' }}>
+                      ${item.total.toFixed(2)}
+                    </span>
                   </div>
                 ))}
 
                 <hr className="divider" />
 
-                <div className="flex justify-between">
+                {/* Totals */}
+                <div className="flex justify-between mb-4">
+                  <span className="body-sm">Subtotal</span>
+                  <span className="body" style={{ color: 'var(--text)' }}>${invoice.subtotal.toFixed(2)}</span>
+                </div>
+                {invoice.tax > 0 && (
+                  <div className="flex justify-between mb-4">
+                    <span className="body-sm">Tax ({invoice.taxRate}%)</span>
+                    <span className="body" style={{ color: 'var(--text)' }}>${invoice.tax.toFixed(2)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between mt-8">
                   <span className="heading-md">Total</span>
                   <span className="heading-md" style={{ color: 'var(--accent)' }}>{invoice.totalUsdc} USDC</span>
                 </div>
 
+                {/* Terms */}
+                <div style={{
+                  marginTop: '16px', padding: '10px 14px',
+                  background: 'var(--bg)', borderRadius: 'var(--radius)', border: '1px solid var(--border)',
+                }}>
+                  <span className="body-sm" style={{ color: 'var(--text-muted)' }}>{invoice.terms}</span>
+                </div>
+
+                {/* Due Date */}
                 <div className="body-sm mt-8" style={{ color: 'var(--text-muted)' }}>
                   Due {new Date(invoice.dueDate).toLocaleDateString()}
                 </div>
 
-                <button className="btn btn-primary mt-24" style={{ width: '100%' }}>
-                  Send & pay via Checkout
-                </button>
+                {/* AI attribution */}
+                <div className="body-sm mt-4" style={{ color: 'var(--text-muted)', fontSize: '0.6875rem' }}>
+                  Generated by {invoice.generatedBy}
+                  {invoice.mode === 'DEMO' && ' · Demo mode'}
+                </div>
+
+                {/* Action Buttons */}
+                <div style={{ display: 'flex', gap: '10px', marginTop: '20px' }}>
+                  <button className="btn btn-primary" onClick={handlePay}
+                    disabled={paying} style={{ flex: 1 }}>
+                    {paying ? <><span className="spinner" /> Processing</> : 'Send & pay via Checkout'}
+                  </button>
+                </div>
               </div>
             )}
           </div>
