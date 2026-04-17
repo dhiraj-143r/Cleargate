@@ -1,0 +1,21 @@
+{
+  "services": {
+    "api": {
+      "path": "backend",
+      "port": 8080,
+      "healthCheck": "/api/health",
+      "env": {
+        "NODE_ENV": "production",
+        "FRONTEND_URL": "${{web.URL}}"
+      }
+    },
+    "web": {
+      "path": "frontend",
+      "port": 8080,
+      "healthCheck": "/",
+      "env": {
+        "VITE_API_URL": "${{api.URL}}"
+      }
+    }
+  }
+}
