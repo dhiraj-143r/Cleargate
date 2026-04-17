@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom'
+import Footer from '../components/Footer'
 
 export default function Landing() {
   return (
@@ -338,6 +339,8 @@ export default function Landing() {
             Start verifying →
           </Link>
         </section>
+
+        <Footer />
       </div>
     </div>
   )
