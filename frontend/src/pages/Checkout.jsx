@@ -36,7 +36,7 @@ export default function Checkout({ apiUrl }) {
           setSession(data)
           clearInterval(interval)
         }
-      } catch (_) {}
+      } catch (_) { }
     }, 3000)
 
     return () => clearInterval(interval)
@@ -98,7 +98,7 @@ export default function Checkout({ apiUrl }) {
 
               <h2 className="heading-lg mb-8">Payment confirmed</h2>
               <p className="body mb-24">
-                ${session.amount} USDC settled on Base — instant and verifiable.
+                ${session.amount} USDC settled on Base. Instant and verifiable.
               </p>
 
               {/* Transaction details */}
@@ -150,7 +150,7 @@ export default function Checkout({ apiUrl }) {
               Complete <em>payment.</em>
             </h1>
             <p className="body-lg mb-32">
-              Settle with USDC on Base — zero wire fees, instant confirmation.
+              Settle with USDC on Base with zero wire fees, instant confirmation.
             </p>
 
             {/* Order Summary */}

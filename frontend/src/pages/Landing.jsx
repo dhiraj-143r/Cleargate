@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom'
 import Footer from '../components/Footer'
 
@@ -11,6 +11,10 @@ const DUMMY_FEEDS = [
     tag1: "CLEAR · ENTITY",
     tag2: "0/72 ENGINES",
     tag3: "DELIVERABLE",
+    tag4: "HIGH REPUTATION",
+    tag5: "NO PROXIES",
+    tag6: "SCRAPED",
+    tag7: "RISK: LOW",
     color: "var(--green)",
     status: "Verified"
   },
@@ -22,6 +26,10 @@ const DUMMY_FEEDS = [
     tag1: "CLEAR · ENTITY",
     tag2: "0/72 ENGINES",
     tag3: "DELIVERABLE",
+    tag4: "HIGH REPUTATION",
+    tag5: "RESIDENTIAL IP",
+    tag6: "SCRAPED",
+    tag7: "RISK: LOW",
     color: "var(--green)",
     status: "Verified"
   },
@@ -33,6 +41,10 @@ const DUMMY_FEEDS = [
     tag1: "FLAGGED · OFAC",
     tag2: "14/72 ENGINES",
     tag3: "UNDELIVERABLE",
+    tag4: "LOW REPUTATION",
+    tag5: "KNOWN VPN",
+    tag6: "TIMEOUT",
+    tag7: "RISK: CRITICAL",
     color: "var(--red, #ff4444)",
     status: "Blocked"
   }
@@ -88,6 +100,50 @@ export default function Landing() {
   const [feedIndex, setFeedIndex] = useState(0);
   const [phase, setPhase] = useState('result'); // 'typing', 'loading', 'result'
   const [typedText, setTypedText] = useState('');
+  const resultsRef = useRef(null);
+
+  useEffect(() => {
+    if (phase === 'result' && resultsRef.current) {
+      let start = resultsRef.current.scrollTop;
+      let end = resultsRef.current.scrollHeight - resultsRef.current.clientHeight;
+      let durationDown = 2500;
+      let durationUp = 1000;
+      let waitTime = 800; // Wait at bottom before going back up
+      
+      let startTime = null;
+
+      const animateScroll = (time) => {
+        if (!startTime) startTime = time;
+        const progress = time - startTime;
+
+        if (progress <= durationDown) {
+          // Scrolling down
+          const percent = progress / durationDown;
+          const easeOut = percent * (2 - percent);
+          resultsRef.current.scrollTop = start + (end - start) * easeOut;
+          requestAnimationFrame(animateScroll);
+        } else if (progress <= durationDown + waitTime) {
+          // Waiting at bottom
+          requestAnimationFrame(animateScroll);
+        } else {
+          // Scrolling back up
+          const upProgress = progress - (durationDown + waitTime);
+          const percent = Math.min(upProgress / durationUp, 1);
+          const easeOut = percent * (2 - percent);
+          resultsRef.current.scrollTop = end - (end - start) * easeOut;
+
+          if (upProgress < durationUp) {
+            requestAnimationFrame(animateScroll);
+          }
+        }
+      };
+      
+      requestAnimationFrame(animateScroll);
+    } else if (phase === 'typing' && resultsRef.current) {
+      // Reset scroll on new search
+      resultsRef.current.scrollTop = 0;
+    }
+  }, [phase, feedIndex]);
 
   useEffect(() => {
     let isActive = true;
@@ -97,7 +153,7 @@ export default function Landing() {
       let currentIndex = 0; // Starts with feedIndex 0
       
       while (isActive) {
-        await sleep(4000); // Stay on result
+        await sleep(5000); // Stay on result
         if (!isActive) break;
 
         const nextIndex = (currentIndex + 1) % DUMMY_FEEDS.length;
@@ -110,15 +166,15 @@ export default function Landing() {
         for (let i = 1; i <= targetText.length; i++) {
           if (!isActive) break;
           setTypedText(targetText.slice(0, i));
-          await sleep(40);
+          await sleep(20);
         }
         if (!isActive) break;
 
-        await sleep(400); // Pause before loading
+        await sleep(200); // Pause before loading
         if (!isActive) break;
 
         setPhase('loading');
-        await sleep(2500); // Loading duration
+        await sleep(1000); // Loading duration
         if (!isActive) break;
 
         setFeedIndex(nextIndex);
@@ -163,17 +219,16 @@ export default function Landing() {
             </h1>
 
             <p className="body-lg" style={{ 
-              margin: '28px auto 0',
-              fontFamily: 'var(--serif)',
-              fontStyle: 'italic',
-              fontSize: '1.25rem',
-              color: 'var(--accent)',
-              letterSpacing: '0.02em',
-              lineHeight: '1.6'
+              margin: '24px auto 0',
+              fontFamily: 'var(--sans)',
+              fontSize: '1.125rem',
+              color: 'var(--text-dim)',
+              lineHeight: '1.6',
+              maxWidth: '600px'
             }}>
               Enter an email, domain, or company name. ClearGate scans 7 security databases
-              in parallel, generates a trust report, and settles payment in USDC on Base —
-              traceable, verifiable, instant.
+              in parallel, generates a trust report, and settles payment in USDC on Base.
+              Traceable, verifiable, instant.
             </p>
 
             <div style={{ display: 'flex', gap: '12px', marginTop: '40px', justifyContent: 'center' }}>
@@ -202,7 +257,7 @@ export default function Landing() {
                 Watch it work<br /><em>in real-time.</em>
               </h2>
               <p className="body-lg" style={{ marginBottom: '32px', color: 'var(--text-muted)' }}>
-                ClearGate isn't just an API—it's an autonomous agent. When you submit a target, it orchestrates 7 different intelligence platforms simultaneously, scoring risk dynamically before generating an invoice.
+                ClearGate isn't just an API, it's an autonomous agent. When you submit a target, it orchestrates 7 different intelligence platforms simultaneously, scoring risk dynamically before generating an invoice.
               </p>
               
               <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -310,11 +365,15 @@ export default function Landing() {
               </div>
 
               {/* Results */}
-              <div>
+              <div ref={resultsRef} className="no-scrollbar" style={{ maxHeight: '230px', overflowY: 'auto', overflowX: 'hidden' }}>
                 {[
                   { name: 'OFAC Sanctions', domain: activeFeed.domain, tag: activeFeed.tag1 },
                   { name: 'VirusTotal Scan', domain: activeFeed.domain, tag: activeFeed.tag2 },
                   { name: 'Email Verified', domain: 'HUNTER.IO', tag: activeFeed.tag3 },
+                  { name: 'Email Reputation', domain: 'EMAILREP.IO', tag: activeFeed.tag4 },
+                  { name: 'IP Intelligence', domain: 'IPQUALITYSCORE', tag: activeFeed.tag5 },
+                  { name: 'Firecrawl Domain Scrape', domain: 'FIRECRAWL.DEV', tag: activeFeed.tag6 },
+                  { name: 'Gemini AI Synthesis', domain: 'GEMINI 2.5', tag: activeFeed.tag7 },
                 ].map((r, i) => (
                   <div key={`${activeFeed.target}-${phase}-${i}`} className="fade-in" style={{
                     padding: '12px 16px',
@@ -326,7 +385,7 @@ export default function Landing() {
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     minHeight: '62px',
-                    animationDelay: `${i * 0.15}s`,
+                    animationDelay: `${i * 0.35}s`,
                     animationFillMode: 'both'
                   }}>
                     {phase !== 'result' ? (
@@ -341,13 +400,15 @@ export default function Landing() {
                           <div style={{
                             fontFamily: "'SF Mono', monospace",
                             fontSize: '0.6875rem',
-                            color: 'var(--accent)',
+                            color: 'var(--text-dim)',
                             letterSpacing: '0.04em',
-                          }}>
-                            {r.domain}
-                          </div>
+                            marginTop: '4px',
+                            textTransform: 'uppercase'
+                          }}>{r.domain}</div>
                         </div>
-                        <span style={{ fontSize: '0.6875rem', color: 'var(--text-muted)' }}>{r.tag}</span>
+                        <div className="badge-accent" style={{ fontSize: '0.625rem', padding: '2px 8px' }}>
+                          {r.tag}
+                        </div>
                       </>
                     )}
                   </div>
@@ -389,34 +450,34 @@ export default function Landing() {
           </h2>
 
           <div className="grid-3" style={{ gap: '24px' }}>
-            <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <img src="/images/verify_illustration_1776500442407.png" alt="Security Verification" style={{ width: '100%', height: '220px', objectFit: 'cover', borderBottom: '1px solid var(--border)' }} />
+            <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#000000' }}>
+              <img src="/images/gemini_1.png" alt="Security Verification" style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
               <div style={{ padding: '24px' }}>
                 <span className="mono mb-16" style={{ display: 'block', color: 'var(--accent)' }}>01</span>
-                <h3 className="heading-md mb-8">Verify</h3>
-                <p className="body">
+                <h3 className="heading-md mb-8" style={{ color: '#ffffff', fontWeight: '400' }}>Verify</h3>
+                <p className="body" style={{ color: '#ffffff', fontWeight: '400' }}>
                   OFAC sanctions screening, VirusTotal domain scan, email verification,
-                  IP intelligence, website analysis. 7 scans in parallel — results in seconds.
+                  IP intelligence, website analysis. 7 scans in parallel, results in seconds.
                 </p>
               </div>
             </div>
-            <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <img src="/images/invoice_illustration_1776500457818.png" alt="AI Invoicing" style={{ width: '100%', height: '220px', objectFit: 'cover', borderBottom: '1px solid var(--border)' }} />
+            <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#000000' }}>
+              <img src="/images/gemini_2.png" alt="AI Invoicing" style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
               <div style={{ padding: '24px' }}>
                 <span className="mono mb-16" style={{ display: 'block', color: 'var(--accent)' }}>02</span>
-                <h3 className="heading-md mb-8">Invoice</h3>
-                <p className="body">
+                <h3 className="heading-md mb-8" style={{ color: '#ffffff', fontWeight: '400' }}>Invoice</h3>
+                <p className="body" style={{ color: '#ffffff', fontWeight: '400' }}>
                   Describe the work in plain language. AI generates a professional invoice
-                  with line items, tax calculation, and payment terms — instantly.
+                  with line items, tax calculation, and payment terms instantly.
                 </p>
               </div>
             </div>
-            <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-              <img src="/images/pay_illustration_1776500474427.png" alt="Crypto Payments" style={{ width: '100%', height: '220px', objectFit: 'cover', borderBottom: '1px solid var(--border)' }} />
+            <div className="card" style={{ padding: '0', overflow: 'hidden', display: 'flex', flexDirection: 'column', background: '#000000' }}>
+              <img src="/images/gemini_3.png" alt="Crypto Payments" style={{ width: '100%', height: '220px', objectFit: 'cover' }} />
               <div style={{ padding: '24px' }}>
                 <span className="mono mb-16" style={{ display: 'block', color: 'var(--accent)' }}>03</span>
-                <h3 className="heading-md mb-8">Pay</h3>
-                <p className="body">
+                <h3 className="heading-md mb-8" style={{ color: '#ffffff', fontWeight: '400' }}>Pay</h3>
+                <p className="body" style={{ color: '#ffffff', fontWeight: '400' }}>
                   One-click USDC payment via Locus Checkout. Zero wire fees. Instant
                   settlement. On-chain receipt with BaseScan transaction hash.
                 </p>
@@ -558,7 +619,7 @@ export default function Landing() {
                 Questions,<br /><em>answered plainly.</em>
               </h2>
               <p className="body-lg" style={{ color: 'var(--text-muted)' }}>
-                Still have something we didn't cover? The agent can probably handle it — every verification prompt is open-ended.
+                Still have something we didn't cover? The agent can probably handle it. Every verification prompt is open-ended.
               </p>
             </div>
 
@@ -567,7 +628,7 @@ export default function Landing() {
               {[
                 {
                   question: "What exactly is ClearGate?",
-                  answer: "ClearGate is an autonomous verification and payment agent. It takes a vendor's email or domain, runs 7 background security checks, generates a professional invoice, and settles the payment in USDC—all in one seamless flow."
+                  answer: "ClearGate is an autonomous verification and payment agent. It takes a vendor's email or domain, runs 7 background security checks, generates a professional invoice, and settles the payment in USDC, all in one seamless flow."
                 },
                 {
                   question: "Do I need a crypto wallet to use this?",
@@ -587,7 +648,7 @@ export default function Landing() {
                 },
                 {
                   question: "What happens if a vendor is flagged as high-risk?",
-                  answer: "If our Gemini AI risk assessment detects a severe threat—such as an OFAC sanctions match or a known malicious domain—the payment is instantly blocked and your funds remain untouched."
+                  answer: "If our Gemini AI risk assessment detects a severe threat, such as an OFAC sanctions match or a known malicious domain, the payment is instantly blocked and your funds remain untouched."
                 }
               ].map((faq, i) => (
                 <FaqItem key={i} question={faq.question} answer={faq.answer} />

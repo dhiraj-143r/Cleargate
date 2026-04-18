@@ -25,7 +25,7 @@ export default function Footer() {
               ClearGate
             </div>
             <p className="body-sm" style={{ maxWidth: '260px', lineHeight: '1.7' }}>
-              AI-powered verification, invoicing, and USDC payment — collapsed into one flow.
+              AI-powered verification, invoicing, and USDC payment, collapsed into one flow.
               Built for the Paygentic Hackathon.
             </p>
           </div>
@@ -57,6 +57,10 @@ export default function Footer() {
               <a href="https://github.com/dhiraj-143r/Cleargate" target="_blank" rel="noopener"
                 className="body-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
                 GitHub ↗
+              </a>
+              <a href="https://www.linkedin.com/in/dhiraj-rathod-2ab229397/" target="_blank" rel="noopener"
+                className="body-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
+                LinkedIn ↗
               </a>
               <a href="https://buildwithlocus.com" target="_blank" rel="noopener"
                 className="body-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>
