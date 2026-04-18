@@ -210,18 +210,27 @@ router.post('/verify', async (req, res) => {
       const email = target.includes('@') ? target : `info@${domain}`;
       const entityName = domain.replace('.com', '').replace('.xyz', '').replace('.io', '').replace('.org', '');
 
+      // Combine Brave searches to save cost
+      const combinedQuery = `${entityName} ${domain} scam fraud sanctions headquarters`;
+
       const apiCalls = [
-        { key: 'ofac', provider: 'brave', endpoint: 'web-search', call: callWrappedAPI('brave', 'web-search', { q: `${entityName} OFAC sanctions fraud warning` }) },
+        { key: 'braveCombined', provider: 'brave', endpoint: 'web-search', call: callWrappedAPI('brave', 'web-search', { q: combinedQuery }) },
         { key: 'hunter', provider: 'hunter', endpoint: 'email-verifier', call: callWrappedAPI('hunter', 'email-verifier', { email }) },
         { key: 'virustotal', provider: 'virustotal', endpoint: 'domain-report', call: callWrappedAPI('virustotal', 'domain-report', { domain }) },
-        { key: 'emailReputation', provider: 'brave', endpoint: 'web-search', call: callWrappedAPI('brave', 'web-search', { q: `${domain} reputation scam review trustworthy` }) },
-        { key: 'ipIntelligence', provider: 'brave', endpoint: 'web-search', call: callWrappedAPI('brave', 'web-search', { q: `${domain} company location headquarters info` }) },
         { key: 'websiteAnalysis', provider: 'firecrawl', endpoint: 'scrape', call: callWrappedAPI('firecrawl', 'scrape', { url: `https://${domain}`, formats: ['markdown'] }) },
       ];
 
       const results = await Promise.allSettled(apiCalls.map(a => a.call));
 
       scanResults = {};
+      
+      // Extract the combined Brave result first
+      let braveResults = [];
+      const braveRaw = results[0].status === 'fulfilled' ? results[0].value : null;
+      if (braveRaw?.success && braveRaw?.data?.web?.results) {
+        braveResults = braveRaw.data.web.results;
+      }
+
       results.forEach((result, idx) => {
         const { key, provider, endpoint } = apiCalls[idx];
         const raw = result.status === 'fulfilled' ? result.value : null;
@@ -229,8 +238,8 @@ router.post('/verify', async (req, res) => {
         const data = raw?.data || null;
 
         // Parse each result into our standard scan format
-        if (key === 'ofac') {
-          const braveResults = data?.web?.results || [];
+        if (key === 'braveCombined') {
+          // 1. Extract OFAC
           const hasSanctionsHits = braveResults.some(r =>
             (r.title + r.description).toLowerCase().includes('sanction') ||
             (r.title + r.description).toLowerCase().includes('ofac')
@@ -248,6 +257,57 @@ router.post('/verify', async (req, res) => {
             },
             riskContribution: hasSanctionsHits ? 40 : 0,
           };
+
+          // 2. Extract Reputation
+          const negativeTerms = ['scam', 'fraud', 'fake', 'phishing', 'warning', 'complaint'];
+          const negativeHits = braveResults.filter(r =>
+            negativeTerms.some(t => (r.title + r.description).toLowerCase().includes(t))
+          ).length;
+          const repScore = Math.max(0, 100 - (negativeHits * 15));
+          scanResults.emailReputation = {
+            status: repScore > 60 ? 'SAFE' : 'CAUTION',
+            provider: 'Brave Search (Reputation)',
+            description: `Domain reputation analysis via web intelligence`,
+            details: {
+              email,
+              reputationScore: repScore,
+              suspicious: negativeHits > 2,
+              spamReported: negativeHits > 0,
+              breachesFound: negativeHits,
+            },
+            riskContribution: repScore > 60 ? 2 : 20,
+          };
+
+          // 3. Extract IP/Location Intelligence
+          const locationMatch = braveResults.find(r => r.description?.match(/(?:headquarter|based in|located)/i));
+          scanResults.ipIntelligence = {
+            status: success ? 'CLEAN' : 'CAUTION',
+            provider: 'Brave Search (Intel)',
+            description: `Company origin and infrastructure analysis`,
+            details: {
+              ip: 'N/A (domain-based lookup)',
+              country: locationMatch ? 'Detected' : 'Unknown',
+              city: locationMatch?.description?.substring(0, 60) || 'See web results',
+              isVpn: false,
+              isProxy: false,
+              isTor: false,
+              isBot: false,
+              isp: domain,
+            },
+            riskContribution: success ? 0 : 10,
+          };
+          
+          // Log only once for the combined call
+          logEntry(reportId, {
+            action: `WEB_INTELLIGENCE_SCAN`,
+            provider: `${provider}/${endpoint}`,
+            status: success ? 'SUCCESS' : 'FAILED',
+            result: data,
+            reasoning: `Called ${provider}/${endpoint} API for combined threat intelligence. Response: ${success ? 'OK' : 'Failed'}.`,
+            costUsdc: API_COSTS.brave || 0.003,
+            durationMs: raw?.duration || 0,
+          });
+
         } else if (key === 'hunter') {
           const hunterData = data?.data || data || {};
           const isValid = hunterData.status === 'valid' || hunterData.result === 'deliverable';
@@ -267,6 +327,15 @@ router.post('/verify', async (req, res) => {
             },
             riskContribution: isValid ? 0 : 25,
           };
+          logEntry(reportId, {
+            action: `HUNTER_SCAN`,
+            provider: `${provider}/${endpoint}`,
+            status: success ? 'SUCCESS' : 'FAILED',
+            result: scanResults.emailVerification,
+            reasoning: `Called ${provider}/${endpoint} API. Response: ${success ? 'OK' : 'Failed'}.`,
+            costUsdc: API_COSTS.hunter || 0.01,
+            durationMs: raw?.duration || 0,
+          });
         } else if (key === 'virustotal') {
           const vtData = data?.data?.attributes || data?.attributes || {};
           const stats = vtData.last_analysis_stats || {};
@@ -283,53 +352,28 @@ router.post('/verify', async (req, res) => {
               categories: vtData.categories ? Object.values(vtData.categories).slice(0, 3) : ['uncategorized'],
               reputation: vtData.reputation || (malicious === 0 ? 90 : 30),
             },
+            // If VT is clean, risk is 0. If malicious, scale up to 40
             riskContribution: malicious === 0 ? 0 : Math.min(malicious * 10, 40),
           };
-        } else if (key === 'emailReputation') {
-          const braveResults = data?.web?.results || [];
-          const negativeTerms = ['scam', 'fraud', 'fake', 'phishing', 'warning', 'complaint'];
-          const negativeHits = braveResults.filter(r =>
-            negativeTerms.some(t => (r.title + r.description).toLowerCase().includes(t))
-          ).length;
-          const repScore = Math.max(0, 100 - (negativeHits * 15));
-          scanResults.emailReputation = {
-            status: repScore > 60 ? 'SAFE' : 'CAUTION',
-            provider: 'Brave Search (Reputation)',
-            description: `Domain reputation analysis via web intelligence`,
-            details: {
-              email,
-              reputationScore: repScore,
-              suspicious: negativeHits > 2,
-              spamReported: negativeHits > 0,
-              breachesFound: negativeHits,
-            },
-            riskContribution: repScore > 60 ? 2 : 20,
-          };
-        } else if (key === 'ipIntelligence') {
-          const braveResults = data?.web?.results || [];
-          const locationMatch = braveResults.find(r => r.description?.match(/(?:headquarter|based in|located)/i));
-          scanResults.ipIntelligence = {
-            status: success ? 'CLEAN' : 'CAUTION',
-            provider: 'Brave Search (Intel)',
-            description: `Company origin and infrastructure analysis`,
-            details: {
-              ip: 'N/A (domain-based lookup)',
-              country: locationMatch ? 'Detected' : 'Unknown',
-              city: locationMatch?.description?.substring(0, 60) || 'See web results',
-              isVpn: false,
-              isProxy: false,
-              isTor: false,
-              isBot: false,
-              isp: domain,
-            },
-            riskContribution: success ? 0 : 10,
-          };
+          logEntry(reportId, {
+            action: `VIRUSTOTAL_SCAN`,
+            provider: `${provider}/${endpoint}`,
+            status: success ? 'SUCCESS' : 'FAILED',
+            result: scanResults.virusTotal,
+            reasoning: `Called ${provider}/${endpoint} API. Response: ${success ? 'OK' : 'Failed'}.`,
+            costUsdc: API_COSTS.virustotal || 0.01,
+            durationMs: raw?.duration || 0,
+          });
         } else if (key === 'websiteAnalysis') {
           const markdown = data?.data?.markdown || data?.markdown || '';
           const metadata = data?.data?.metadata || data?.metadata || {};
-          const hasContent = markdown.length > 500;
+          
+          // Many legitimate sites block Firecrawl with Cloudflare. 
+          // If we got blocked (length < 50), we shouldn't heavily penalize if reputation is high.
+          const hasContent = markdown.length > 50;
+          
           scanResults.websiteAnalysis = {
-            status: hasContent ? 'LEGITIMATE' : 'SUSPICIOUS',
+            status: hasContent ? 'LEGITIMATE' : (success ? 'PROTECTED' : 'SUSPICIOUS'),
             provider: 'Firecrawl',
             description: `Website content scrape and legitimacy analysis`,
             details: {
@@ -341,22 +385,32 @@ router.post('/verify', async (req, res) => {
               contentLength: markdown.length,
               domainAge: 'N/A (live scrape)',
             },
-            riskContribution: hasContent ? 0 : 15,
+            // Reduce penalty from 15 to 0 if the site simply has bot protection
+            riskContribution: hasContent ? 0 : 0, 
           };
+          logEntry(reportId, {
+            action: `FIRECRAWL_SCAN`,
+            provider: `${provider}/${endpoint}`,
+            status: success ? 'SUCCESS' : 'FAILED',
+            result: scanResults.websiteAnalysis,
+            reasoning: `Called ${provider}/${endpoint} API. Response: ${success ? 'OK' : 'Failed'}.`,
+            costUsdc: API_COSTS.firecrawl || 0.003,
+            durationMs: raw?.duration || 0,
+          });
         }
-
-        // Log each scan to audit trail
-        const scanResult = scanResults[key] || scanResults[key === 'websiteAnalysis' ? 'websiteAnalysis' : key];
-        logEntry(reportId, {
-          action: `${key.toUpperCase()}_SCAN`,
-          provider: `${provider}/${endpoint}`,
-          status: success ? 'SUCCESS' : 'FAILED',
-          result: scanResult || data,
-          reasoning: `Called ${provider}/${endpoint} API. Response: ${success ? 'OK' : 'Failed'}. Duration: ${raw?.duration || 0}ms.`,
-          costUsdc: API_COSTS[key] || 0.005,
-          durationMs: raw?.duration || 0,
-        });
       });
+      
+      // Post-process: If domain is highly reputable, forgive Hunter email verification failures
+      // Large companies use strict SMTP filters that block Hunter's pings.
+      if (scanResults.emailReputation?.details?.reputationScore > 80 && scanResults.virusTotal?.status === 'CLEAN') {
+         if (scanResults.emailVerification) {
+            scanResults.emailVerification.riskContribution = 0; // Forgive the 25 point penalty
+            if (scanResults.emailVerification.status === 'UNVERIFIED') {
+                scanResults.emailVerification.status = 'ASSUMED VALID';
+                scanResults.emailVerification.details.note = "Domain is highly reputable; SMTP verification failure ignored due to likely anti-spam protection.";
+            }
+         }
+      }
     }
 
     // AI risk assessment (use Gemini in live mode)
@@ -383,7 +437,8 @@ Return ONLY valid JSON:
         });
 
         if (aiResult.success && aiResult.data) {
-          const text = aiResult.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          const geminiPayload = aiResult.data.data || aiResult.data;
+          const text = geminiPayload.candidates?.[0]?.content?.parts?.[0]?.text || '';
           const jsonMatch = text.match(/\{[\s\S]*\}/);
           if (jsonMatch) {
             const parsed = JSON.parse(jsonMatch[0]);

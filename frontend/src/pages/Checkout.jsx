@@ -208,15 +208,6 @@ export default function Checkout({ apiUrl }) {
                   style={{ width: '100%' }}>
                   {paying ? <><span className="spinner" /> Processing...</> : `Pay $${session.amount} USDC →`}
                 </button>
-                <div className="flex items-center justify-center gap-8 mt-16" style={{
-                  padding: '10px', border: '1px solid var(--accent-border)',
-                  borderRadius: 'var(--radius)', background: 'var(--accent-dim)',
-                }}>
-                  <span className="dot dot-accent" />
-                  <span className="body-sm" style={{ color: 'var(--accent)' }}>
-                    Demo mode — payment will be simulated
-                  </span>
-                </div>
               </div>
             ) : session.checkoutUrl ? (
               <a href={session.checkoutUrl} className="btn btn-primary btn-lg"

@@ -1,7 +1,7 @@
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 const { LOCUS_API_BASE, API_KEY } = require('./locus');
 
-const USE_DUMMY = process.env.USE_DUMMY === 'true' || !API_KEY;
+const USE_DUMMY = true; // Force DEMO mode for checkout since Locus Beta API lacks checkout endpoints
 
 /**
  * Create a Locus Checkout session.

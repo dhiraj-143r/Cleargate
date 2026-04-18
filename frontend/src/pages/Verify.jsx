@@ -123,11 +123,27 @@ export default function Verify({ apiUrl }) {
         )}
 
         {loading && (
-          <div className="flex flex-col items-center gap-16 mt-48">
+          <div className="flex flex-col items-center gap-16 mt-48 fade-in">
             <div className="spinner spinner-lg" />
             <span className="body">Running 7 parallel scans...</span>
             <div className="grid-2" style={{ width: '100%', marginTop: '12px' }}>
-              {[1,2,3,4,5,6].map(i => <div key={i} className="skeleton" style={{ height: '72px' }} />)}
+              {['Global Sanctions (OFAC)', 'Domain Reputation Check', 'Email Deliverability', 'IP & Geolocation Intel', 'Website Content Scraper', 'Gemini AI Assessment'].map((scanName, i) => (
+                <div key={i} className="skeleton" style={{ 
+                  height: '72px', 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  padding: '0 24px', 
+                  animationDelay: `${i * 0.15}s`,
+                  border: '1px solid var(--accent-border)'
+                }}>
+                   <div style={{ display: 'flex', alignItems: 'center', gap: '12px', opacity: 0.6 }}>
+                      <span className="spinner" style={{ width: '14px', height: '14px', borderWidth: '2px' }} />
+                      <span style={{color: 'var(--text-muted)', fontSize: '0.85rem', fontFamily: 'var(--mono)'}}>
+                        {scanName}
+                      </span>
+                   </div>
+                </div>
+              ))}
             </div>
           </div>
         )}

@@ -46,6 +46,10 @@ export default function Dashboard({ apiUrl }) {
     { id: 'audit', label: 'Audit Log', count: auditLog.length },
   ]
 
+  const totalSpent = Math.abs(transactions.filter(t => t.amount?.startsWith?.('-')).reduce((s, t) => s + parseFloat(t.amount), 0)) || 0;
+  const latestVerTx = transactions.find(t => t.type === 'VERIFICATION' && t.amount?.startsWith?.('-'));
+  const lastReportCost = latestVerTx ? Math.abs(parseFloat(latestVerTx.amount)) : 0;
+
   return (
     <div className="page">
       <div className="container" style={{ maxWidth: '900px' }}>
@@ -62,11 +66,14 @@ export default function Dashboard({ apiUrl }) {
           <>
             {/* Stats */}
             <div className="grid-4 mb-32">
-              <div className="card" style={{ textAlign: 'center', padding: '20px' }}>
+              <div className="card" style={{ textAlign: 'center', padding: '20px', borderColor: 'var(--accent-border)' }}>
                 <div style={{ fontFamily: 'var(--serif)', fontSize: '2rem', color: 'var(--accent)' }}>
-                  ${balance?.balance || '0.00'}
+                  ${balance?.promo_credit_balance || balance?.balance || '0.00'}
                 </div>
-                <p className="body-sm mt-4">USDC balance</p>
+                <div className="body-sm mt-4 flex items-center justify-center gap-8">
+                  Available balance
+                  {balance?.promo_credit_balance && <span className="badge badge-safe">Promo</span>}
+                </div>
               </div>
               <div className="card" style={{ textAlign: 'center', padding: '20px' }}>
                 <div style={{ fontFamily: 'var(--serif)', fontSize: '2rem', color: 'var(--text)' }}>
@@ -82,7 +89,7 @@ export default function Dashboard({ apiUrl }) {
               </div>
               <div className="card" style={{ textAlign: 'center', padding: '20px' }}>
                 <div style={{ fontFamily: 'var(--serif)', fontSize: '2rem', color: 'var(--text)' }}>
-                  ${Math.abs(transactions.filter(t => t.amount?.startsWith?.('-')).reduce((s, t) => s + parseFloat(t.amount), 0)).toFixed(2)}
+                  ${totalSpent.toFixed(2)}
                 </div>
                 <p className="body-sm mt-4">Total spent</p>
               </div>
@@ -96,9 +103,9 @@ export default function Dashboard({ apiUrl }) {
                 background: 'var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', marginTop: '12px',
               }}>
                 {[
-                  { label: 'Per report', value: '$2.00', used: 1.00, max: 2.00 },
-                  { label: 'Daily budget', value: '$10.00', used: 3.00, max: 10.00 },
-                  { label: 'Session cap', value: '$50.00', used: 3.00, max: 50.00 },
+                  { label: 'Last report cost', value: 'Max $2.00', used: lastReportCost, max: 2.00 },
+                  { label: 'Daily budget', value: '$10.00', used: totalSpent, max: 10.00 },
+                  { label: 'Promo limit', value: '$5.00', used: totalSpent, max: 5.00 },
                 ].map((c, i) => (
                   <div key={i} style={{ background: 'var(--bg)', padding: '16px' }}>
                     <div className="body-sm" style={{ color: 'var(--text-muted)' }}>{c.label}</div>
@@ -108,7 +115,7 @@ export default function Dashboard({ apiUrl }) {
                       marginTop: '10px', overflow: 'hidden',
                     }}>
                       <div style={{
-                        height: '100%', width: `${(c.used / c.max) * 100}%`,
+                        height: '100%', width: `${Math.min((c.used / c.max) * 100, 100)}%`,
                         background: 'var(--accent)', borderRadius: '2px',
                         transition: 'width 0.6s ease',
                       }} />

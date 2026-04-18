@@ -125,6 +125,19 @@ router.post('/invoice/:id/pay', async (req, res) => {
     invoice.checkoutUrl = session.checkoutUrl;
     store.invoices.save(invoice.id, invoice);
 
+    // Store the session so the checkout page can find it
+    store.sessions.save(session.sessionId, {
+      id: session.sessionId,
+      invoiceId: invoice.id,
+      amount: invoice.totalUsdc,
+      title: `Invoice ${invoice.invoiceNumber}`,
+      status: session.status || 'PENDING',
+      checkoutUrl: session.checkoutUrl,
+      createdAt: new Date().toISOString(),
+      expiresAt: session.expiresAt,
+      mode: session.mode,
+    });
+
     log({
       action: 'Invoice Payment Initiated',
       provider: 'Locus Checkout',

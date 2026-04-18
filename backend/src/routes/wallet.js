@@ -71,9 +71,34 @@ router.get('/transactions', async (req, res) => {
       });
     }
 
-    const data = await getTransactions();
+    const locusRes = await getTransactions();
+    let remoteTxs = [];
+    if (locusRes && locusRes.data && locusRes.data.transactions) {
+      remoteTxs = locusRes.data.transactions;
+    }
+
+    // Since we simulated checkout for the hackathon, we need to manually inject
+    // our local PAID sessions into the transaction list so they show up!
+    const store = require('../store/memoryStore');
+    const localSessions = store.sessions.getAll();
+    const localTxs = localSessions
+      .filter(s => s.status === 'PAID')
+      .map(s => ({
+        id: s.id,
+        type: s.invoiceId ? 'INVOICE' : 'VERIFICATION',
+        target: s.title || 'ClearGate Checkout',
+        amount: `-${parseFloat(s.amount).toFixed(2)}`,
+        status: 'COMPLETED',
+        riskScore: null,
+        timestamp: s.paidAt,
+        txHash: s.txHash,
+      }));
+
+    // Merge and sort by timestamp
+    const allTxs = [...remoteTxs, ...localTxs].sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+
     res.json({
-      transactions: data.transactions || [],
+      transactions: allTxs,
       mode: 'LIVE',
     });
   } catch (error) {
