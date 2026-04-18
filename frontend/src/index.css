@@ -454,3 +454,11 @@ a {
 .mb-32 { margin-bottom: 32px; }
 .mb-48 { margin-bottom: 48px; }
 .text-center { text-align: center; }
+
+.cursor-blink {
+  animation: blink 1s step-end infinite;
+  color: var(--accent);
+}
+@keyframes blink {
+  50% { opacity: 0; }
+}
