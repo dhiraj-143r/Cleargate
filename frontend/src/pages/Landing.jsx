@@ -38,6 +38,52 @@ const DUMMY_FEEDS = [
   }
 ];
 
+const FaqItem = ({ question, answer }) => {
+  const [isOpen, setIsOpen] = useState(false);
+  return (
+    <div style={{ borderBottom: '1px solid var(--border)' }}>
+      <button 
+        onClick={() => setIsOpen(!isOpen)}
+        style={{
+          width: '100%',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: '24px 0',
+          background: 'none',
+          border: 'none',
+          color: 'var(--text)',
+          cursor: 'pointer',
+          textAlign: 'left',
+          fontSize: '1.25rem',
+          fontFamily: 'var(--serif)'
+        }}
+      >
+        <span>{question}</span>
+        <span style={{ 
+          color: 'var(--text-muted)',
+          transform: isOpen ? 'rotate(45deg)' : 'none',
+          transition: 'transform 0.2s ease',
+          fontSize: '1.25rem',
+          fontWeight: '300'
+        }}>+</span>
+      </button>
+      <div style={{
+        height: isOpen ? 'auto' : 0,
+        overflow: 'hidden',
+        opacity: isOpen ? 1 : 0,
+        transition: 'all 0.3s ease',
+        paddingBottom: isOpen ? '24px' : 0,
+        color: 'var(--text-muted)',
+        fontSize: '0.9375rem',
+        lineHeight: 1.6
+      }}>
+        {answer}
+      </div>
+    </div>
+  );
+};
+
 export default function Landing() {
   const [feedIndex, setFeedIndex] = useState(0);
   const [phase, setPhase] = useState('result'); // 'typing', 'loading', 'result'
@@ -116,7 +162,15 @@ export default function Landing() {
               you pay.
             </h1>
 
-            <p className="body-lg" style={{ marginTop: '28px', margin: '28px auto 0' }}>
+            <p className="body-lg" style={{ 
+              margin: '28px auto 0',
+              fontFamily: 'var(--serif)',
+              fontStyle: 'italic',
+              fontSize: '1.25rem',
+              color: 'var(--accent)',
+              letterSpacing: '0.02em',
+              lineHeight: '1.6'
+            }}>
               Enter an email, domain, or company name. ClearGate scans 7 security databases
               in parallel, generates a trust report, and settles payment in USDC on Base —
               traceable, verifiable, instant.
@@ -423,9 +477,9 @@ export default function Landing() {
                     fontSize: '0.625rem',
                     fontWeight: '700',
                     letterSpacing: '0.06em',
-                    background: api.type === 'CORE' ? 'transparent' : 'var(--accent)',
-                    color: api.type === 'CORE' ? 'var(--text-muted)' : '#060608',
-                    border: api.type === 'CORE' ? '1px solid var(--border)' : 'none',
+                    background: 'transparent',
+                    color: api.type === 'CORE' ? 'var(--text-muted)' : 'var(--accent)',
+                    border: api.type === 'CORE' ? '1px solid var(--border)' : '1px solid var(--accent)',
                   }}>
                     {api.type}
                   </span>
@@ -485,6 +539,59 @@ export default function Landing() {
               </div>
               <p className="body mt-8">wire fees</p>
               <p className="body-sm">USDC on Base, instant settlement</p>
+            </div>
+          </div>
+        </section>
+
+        {/* ── FAQ ── */}
+        <section style={{ padding: '80px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: '1fr 1.5fr',
+            gap: '80px',
+            alignItems: 'flex-start',
+          }}>
+            {/* Left Col */}
+            <div>
+              <span className="mono mb-24" style={{ display: 'block', color: 'var(--text-muted)' }}>FREQUENTLY ASKED</span>
+              <h2 className="heading-lg mb-24">
+                Questions,<br /><em>answered plainly.</em>
+              </h2>
+              <p className="body-lg" style={{ color: 'var(--text-muted)' }}>
+                Still have something we didn't cover? The agent can probably handle it — every verification prompt is open-ended.
+              </p>
+            </div>
+
+            {/* Right Col */}
+            <div>
+              {[
+                {
+                  question: "What exactly is ClearGate?",
+                  answer: "ClearGate is an autonomous verification and payment agent. It takes a vendor's email or domain, runs 7 background security checks, generates a professional invoice, and settles the payment in USDC—all in one seamless flow."
+                },
+                {
+                  question: "Do I need a crypto wallet to use this?",
+                  answer: "Yes, you will need a Web3 wallet. ClearGate uses Locus Checkout to securely route your USDC payment on the Base network directly to the verified vendor."
+                },
+                {
+                  question: "How long does the verification take?",
+                  answer: "Under 5 seconds. Our agent queries 7 distinct intelligence databases (including OFAC, VirusTotal, and Hunter.io) in parallel, drastically reducing the time it takes to clear a vendor."
+                },
+                {
+                  question: "Why use ClearGate instead of traditional wire transfers?",
+                  answer: "Traditional wires can take days, charge exorbitant fees, and offer zero built-in vendor security. ClearGate verifies the recipient instantly, costs exactly $0.04 to route, and settles immediately."
+                },
+                {
+                  question: "Can I use ClearGate to pay international vendors?",
+                  answer: "Absolutely. Because we settle transactions in USDC on the Base blockchain, cross-border payments are instant and immune to traditional foreign exchange delays."
+                },
+                {
+                  question: "What happens if a vendor is flagged as high-risk?",
+                  answer: "If our Gemini AI risk assessment detects a severe threat—such as an OFAC sanctions match or a known malicious domain—the payment is instantly blocked and your funds remain untouched."
+                }
+              ].map((faq, i) => (
+                <FaqItem key={i} question={faq.question} answer={faq.answer} />
+              ))}
             </div>
           </div>
         </section>
