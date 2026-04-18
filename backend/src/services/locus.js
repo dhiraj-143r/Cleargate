@@ -1,6 +1,6 @@
 const fetch = (...args) => import('node-fetch').then(({ default: f }) => f(...args));
 
-const LOCUS_API_BASE = 'https://beta-api.paywithlocus.com';
+const LOCUS_API_BASE = process.env.LOCUS_API_BASE || 'https://api.paywithlocus.com';
 const API_KEY = process.env.LOCUS_API_KEY || '';
 
 /**
@@ -19,7 +19,7 @@ async function callWrappedAPI(provider, endpoint, body) {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'x-api-key': API_KEY,
+        'Authorization': `Bearer ${API_KEY}`,
       },
       body: JSON.stringify(body),
     });
@@ -53,7 +53,7 @@ async function callWrappedAPI(provider, endpoint, body) {
  */
 async function getBalance() {
   const res = await fetch(`${LOCUS_API_BASE}/api/pay/balance`, {
-    headers: { 'x-api-key': API_KEY },
+    headers: { 'Authorization': `Bearer ${API_KEY}` },
   });
   return res.json();
 }
@@ -63,7 +63,7 @@ async function getBalance() {
  */
 async function getTransactions() {
   const res = await fetch(`${LOCUS_API_BASE}/api/pay/transactions`, {
-    headers: { 'x-api-key': API_KEY },
+    headers: { 'Authorization': `Bearer ${API_KEY}` },
   });
   return res.json();
 }
@@ -76,7 +76,7 @@ async function sendEmailEscrow(email, amount, memo) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
+      'Authorization': `Bearer ${API_KEY}`,
     },
     body: JSON.stringify({ email, amount, memo }),
   });
@@ -91,7 +91,7 @@ async function sendAgentMail(to, subject, body) {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
+      'Authorization': `Bearer ${API_KEY}`,
     },
     body: JSON.stringify({ to, subject, body }),
   });

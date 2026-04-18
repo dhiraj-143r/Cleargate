@@ -207,12 +207,12 @@ router.post('/verify', async (req, res) => {
       const domain = target.includes('@') ? target.split('@')[1] : target;
 
       const apiCalls = [
-        { key: 'ofac', call: callWrappedAPI('ofac', 'search', { name: domain.replace('.com', ''), type: 'entity' }) },
-        { key: 'hunter', call: callWrappedAPI('hunter', 'verify-email', { email: target }) },
-        { key: 'virustotal', call: callWrappedAPI('virustotal', 'scan-url', { url: `https://${domain}` }) },
-        { key: 'emailReputation', call: callWrappedAPI('abstract-email-reputation', 'check', { email: target }) },
-        { key: 'ipIntelligence', call: callWrappedAPI('abstract-ip-intelligence', 'check', { domain }) },
-        { key: 'firecrawl', call: callWrappedAPI('firecrawl', 'scrape', { url: `https://${domain}` }) },
+        { key: 'ofac', call: callWrappedAPI('ofac', 'sanctions-screening', { cases: [{ name: domain.replace('.com', '').replace('.xyz', '').replace('.io', '') }] }) },
+        { key: 'hunter', call: callWrappedAPI('hunter', 'email-verifier', { email: target.includes('@') ? target : `info@${domain}` }) },
+        { key: 'virustotal', call: callWrappedAPI('virustotal', 'domain-report', { domain }) },
+        { key: 'emailReputation', call: callWrappedAPI('abstract-email-validation', 'validate', { email: target.includes('@') ? target : `info@${domain}` }) },
+        { key: 'ipIntelligence', call: callWrappedAPI('abstract-ip-geolocation', 'lookup', { ip_address: '8.8.8.8' }) },
+        { key: 'firecrawl', call: callWrappedAPI('firecrawl', 'scrape', { url: `https://${domain}`, formats: ['markdown'] }) },
       ];
 
       const results = await Promise.allSettled(apiCalls.map(a => a.call));

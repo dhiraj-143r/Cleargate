@@ -57,9 +57,9 @@ Rules:
 - Keep descriptions professional and specific`;
 
   try {
-    const result = await callWrappedAPI('gemini', 'generate', {
-      prompt,
+    const result = await callWrappedAPI('gemini', 'chat', {
       model: 'gemini-2.0-flash',
+      messages: [{ role: 'user', content: prompt }],
     });
 
     if (result.success && result.data) {
