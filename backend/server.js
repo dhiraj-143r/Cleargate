@@ -9,6 +9,7 @@ const checkoutRoutes = require('./src/routes/checkout');
 const deliverRoutes = require('./src/routes/deliver');
 const walletRoutes = require('./src/routes/wallet');
 const reportsRoutes = require('./src/routes/reports');
+const deployRoutes = require('./src/routes/deploy');
 
 const app = express();
 const PORT = process.env.PORT || 8080;
@@ -39,6 +40,7 @@ app.use('/api', checkoutRoutes);
 app.use('/api', deliverRoutes);
 app.use('/api', walletRoutes);
 app.use('/api', reportsRoutes);
+app.use('/api', deployRoutes);
 
 // 404 handler
 app.use((req, res) => {

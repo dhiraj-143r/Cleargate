@@ -64,6 +64,7 @@ export default function Dashboard({ apiUrl }) {
     { id: 'reports', label: 'Reports', count: reports.length },
     { id: 'invoices', label: 'Invoices', count: invoices.length },
     { id: 'audit', label: 'Audit Log', count: auditLog.length },
+    { id: 'enterprise', label: 'Enterprise', count: 0 },
   ]
 
   const totalSpent = Math.abs(transactions.filter(t => t.amount?.startsWith?.('-')).reduce((s, t) => s + parseFloat(t.amount), 0)) || 0;
@@ -341,6 +342,77 @@ export default function Dashboard({ apiUrl }) {
                     ))
                   )}
                 </>
+              )}
+
+              {activeTab === 'enterprise' && (
+                <div style={{ padding: '20px 0' }}>
+                  <span className="mono mb-16" style={{ display: 'block' }}>ENTERPRISE DEPLOYMENT</span>
+                  <div className="card" style={{ border: '1px solid var(--accent-border)', background: 'rgba(57, 255, 20, 0.03)' }}>
+                    <h3 className="heading-md mb-8">Deploy White-Label Portal</h3>
+                    <p className="body-sm mb-24" style={{ color: 'var(--text-muted)' }}>
+                      Automatically provision a dedicated, isolated instance of the ClearGate platform for a new enterprise client using the BuildWithLocus API.
+                    </p>
+                    
+                    <form id="enterprise-deploy-form" onSubmit={async (e) => {
+                      e.preventDefault();
+                      const btn = document.getElementById('deploy-btn');
+                      const input = document.getElementById('client-name');
+                      const resultDiv = document.getElementById('deploy-result');
+                      
+                      const clientName = input.value.trim();
+                      if (!clientName) return;
+                      
+                      btn.disabled = true;
+                      btn.textContent = 'Provisioning infrastructure...';
+                      resultDiv.innerHTML = '';
+                      
+                      try {
+                        const res = await fetch(`${apiUrl}/deploy-enterprise`, {
+                          method: 'POST',
+                          headers: { 'Content-Type': 'application/json' },
+                          body: JSON.stringify({ clientName })
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                          resultDiv.innerHTML = `
+                            <div style="margin-top: 16px; padding: 16px; background: rgba(57, 255, 20, 0.1); border-radius: var(--radius); border: 1px solid var(--green);">
+                              <p class="body-sm" style="color: var(--green); font-weight: 500; margin-bottom: 8px;">✅ Infrastructure Provisioned Successfully!</p>
+                              <p class="body-sm">The new ClearGate instance is building on Locus. It will be live in 2-5 minutes.</p>
+                              <div style="margin-top: 12px; font-family: 'SF Mono', monospace; font-size: 0.8125rem;">
+                                <div><span style="color: var(--text-muted)">Project ID:</span> ${data.project?.id || 'Unknown'}</div>
+                                <div style="margin-top: 4px;"><span style="color: var(--text-muted)">Web URL:</span> <a href="${data.urls?.web}" target="_blank" style="color: var(--accent)">${data.urls?.web}</a></div>
+                                <div style="margin-top: 4px;"><span style="color: var(--text-muted)">API URL:</span> <span style="color: var(--text)">${data.urls?.api}</span></div>
+                              </div>
+                            </div>
+                          `;
+                          input.value = '';
+                        } else {
+                          throw new Error(data.error || 'Failed to deploy');
+                        }
+                      } catch (err) {
+                        resultDiv.innerHTML = `<p class="body-sm mt-16" style="color: var(--red);">${err.message}</p>`;
+                      } finally {
+                        btn.disabled = false;
+                        btn.textContent = 'Deploy Enterprise Portal';
+                      }
+                    }}>
+                      <div style={{ display: 'flex', gap: '12px' }}>
+                        <input 
+                          type="text" 
+                          id="client-name"
+                          className="input" 
+                          placeholder="e.g., Acme Corp Agency"
+                          style={{ flex: 1 }}
+                        />
+                        <button type="submit" id="deploy-btn" className="btn btn-primary">
+                          Deploy Enterprise Portal
+                        </button>
+                      </div>
+                    </form>
+                    <div id="deploy-result"></div>
+                  </div>
+                </div>
               )}
             </div>
 
