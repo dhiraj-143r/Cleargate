@@ -10,7 +10,7 @@ import Audit from './pages/Audit'
 import Batch from './pages/Batch'
 import Enterprise from './pages/Enterprise'
 
-const API_URL = import.meta.env.VITE_API_URL || '/api'
+const API_URL = import.meta.env.DEV ? '/api' : 'https://svc-mo5nnu4nl3nuz3b7.buildwithlocus.com/api';
 
 function App() {
   return (
