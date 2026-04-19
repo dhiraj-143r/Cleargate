@@ -55,18 +55,40 @@ export default function Navbar() {
           <Link
             to="/enterprise"
             style={{
-              fontSize: '0.875rem',
-              fontWeight: '500',
-              color: '#000000',
-              backgroundColor: '#a39af5',
+              fontSize: '0.8125rem',
+              fontWeight: '600',
+              color: 'var(--accent)',
+              backgroundColor: 'rgba(155, 151, 215, 0.05)',
+              border: '1px solid rgba(155, 151, 215, 0.25)',
               padding: '6px 16px',
-              borderRadius: '8px',
+              borderRadius: '999px',
               textDecoration: 'none',
-              transition: 'opacity 150ms ease',
+              transition: 'all 200ms ease',
+              boxShadow: '0 0 15px rgba(155, 151, 215, 0.08)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              letterSpacing: '0.02em'
             }}
-            onMouseOver={(e) => e.target.style.opacity = '0.9'}
-            onMouseOut={(e) => e.target.style.opacity = '1'}
+            onMouseOver={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(155, 151, 215, 0.12)';
+              e.currentTarget.style.boxShadow = '0 0 20px rgba(155, 151, 215, 0.25)';
+              e.currentTarget.style.borderColor = 'rgba(155, 151, 215, 0.5)';
+            }}
+            onMouseOut={(e) => {
+              e.currentTarget.style.backgroundColor = 'rgba(155, 151, 215, 0.05)';
+              e.currentTarget.style.boxShadow = '0 0 15px rgba(155, 151, 215, 0.08)';
+              e.currentTarget.style.borderColor = 'rgba(155, 151, 215, 0.25)';
+            }}
           >
+            <span style={{ 
+              width: '6px', 
+              height: '6px', 
+              borderRadius: '50%', 
+              backgroundColor: 'var(--green)', 
+              display: 'inline-block', 
+              boxShadow: '0 0 8px var(--green)' 
+            }}></span>
             Enterprise
           </Link>
         </div>
