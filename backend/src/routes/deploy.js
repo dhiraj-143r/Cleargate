@@ -42,6 +42,19 @@ router.post('/deploy-enterprise', async (req, res) => {
     const sanitizedName = clientName.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
     const projectName = `cg-ent-${sanitizedName}-${uuidv4().split('-')[0]}`;
 
+    if (process.env.USE_DUMMY === 'true') {
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      return res.json({
+        success: true,
+        message: 'Infrastructure provisioning started.',
+        project: { id: `proj_mock_${uuidv4().split('-')[0]}` },
+        urls: {
+          web: `https://svc-mockweb-${uuidv4().split('-')[0]}.buildwithlocus.com`,
+          api: `https://svc-mockapi-${uuidv4().split('-')[0]}.buildwithlocus.com`
+        }
+      });
+    }
+
     // 1. Get auth token
     const token = await getBuildToken();
 
