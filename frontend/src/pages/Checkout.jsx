@@ -130,7 +130,7 @@ export default function Checkout({ apiUrl }) {
                 .locus-check-svg {
                   stroke-dasharray: 50;
                   stroke-dashoffset: 50;
-                  animation: drawCheck 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                  animation: drawCheck 2.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
                   animation-delay: 0.1s;
                   width: 32px;
                   height: 32px;
