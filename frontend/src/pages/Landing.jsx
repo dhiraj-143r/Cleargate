@@ -96,6 +96,43 @@ const FaqItem = ({ question, answer }) => {
   );
 };
 
+const FadeInSection = ({ children }) => {
+  const [isVisible, setVisible] = useState(false);
+  const domRef = useRef();
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(entries => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          setVisible(true);
+          observer.unobserve(domRef.current);
+        }
+      });
+    }, { threshold: 0.1, rootMargin: '0px 0px -50px 0px' });
+
+    const currentRef = domRef.current;
+    if (currentRef) observer.observe(currentRef);
+    
+    return () => {
+      if (currentRef) observer.unobserve(currentRef);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={domRef}
+      style={{
+        opacity: isVisible ? 1 : 0,
+        transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
+        transition: 'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
+        willChange: 'opacity, transform'
+      }}
+    >
+      {children}
+    </div>
+  );
+};
+
 export default function Landing() {
   const [feedIndex, setFeedIndex] = useState(0);
   const [phase, setPhase] = useState('result'); // 'typing', 'loading', 'result'
@@ -243,6 +280,7 @@ export default function Landing() {
         </section>
 
         {/* ── Verification Agent Card ── */}
+        <FadeInSection>
         <section style={{ padding: '80px 0 100px' }}>
           <div style={{
             display: 'grid',
@@ -442,7 +480,9 @@ export default function Landing() {
           </div>
           </div>
         </section>
+        </FadeInSection>
         {/* ── How It Works ── */}
+        <FadeInSection>
         <section id="how" style={{ padding: '100px 0 80px' }}>
           <span className="mono mb-24" style={{ display: 'block' }}>HOW IT WORKS</span>
           <h2 className="heading-lg mb-48">
@@ -485,8 +525,10 @@ export default function Landing() {
             </div>
           </div>
         </section>
+        </FadeInSection>
 
         {/* ── Integrations ── */}
+        <FadeInSection>
         <section style={{ padding: '60px 0 80px' }}>
           <span className="mono mb-24" style={{ display: 'block' }}>LOCUS INTEGRATIONS</span>
           <h2 className="heading-lg mb-16">
@@ -558,8 +600,10 @@ export default function Landing() {
             ))}
           </div>
         </section>
+        </FadeInSection>
 
         {/* ── Numbers ── */}
+        <FadeInSection>
         <section style={{ padding: '60px 0 80px' }}>
           <div className="grid-3">
             <div style={{ textAlign: 'center' }}>
@@ -603,8 +647,10 @@ export default function Landing() {
             </div>
           </div>
         </section>
+        </FadeInSection>
 
         {/* ── FAQ ── */}
+        <FadeInSection>
         <section style={{ padding: '80px 0', borderTop: '1px solid var(--border)', borderBottom: '1px solid var(--border)' }}>
           <div style={{
             display: 'grid',
@@ -656,8 +702,10 @@ export default function Landing() {
             </div>
           </div>
         </section>
+        </FadeInSection>
 
         {/* ── CTA ── */}
+        <FadeInSection>
         <section style={{
           textAlign: 'center',
           padding: '80px 0 40px',
@@ -672,6 +720,7 @@ export default function Landing() {
             Start verifying →
           </Link>
         </section>
+        </FadeInSection>
 
         <Footer />
       </div>
