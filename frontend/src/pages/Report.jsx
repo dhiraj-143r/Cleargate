@@ -12,6 +12,7 @@ export default function Report({ apiUrl }) {
   const [delivered, setDelivered] = useState(null)
 
   useEffect(() => {
+    window.scrollTo(0, 0);
     async function load() {
       try {
         const res = await fetch(`${apiUrl}/reports/${id}`)
