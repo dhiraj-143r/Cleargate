@@ -14,8 +14,10 @@ export default function Report({ apiUrl }) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`${apiUrl}/api/reports/${id}`)
-        if (res.ok) setReport(await res.json())
+        const res = await fetch(`${apiUrl}/reports/${id}`)
+        if (!res.ok) throw new Error('Failed to load report')
+        const data = await res.json()
+        setReport(data)
       } catch (err) { console.error(err) }
       finally { setLoading(false) }
     }
@@ -26,12 +28,13 @@ export default function Report({ apiUrl }) {
     if (!email) return
     setSending(true)
     try {
-      const res = await fetch(`${apiUrl}/api/deliver`, {
+      const res = await fetch(`${apiUrl}/deliver`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ reportId: id, email }),
+        body: JSON.stringify({ reportId: id, email })
       })
-      setDelivered(await res.json())
+      if (!res.ok) throw new Error('Failed to send report')
+      setDelivered({ success: true, message: 'Report sent successfully' })
     } catch (err) { console.error(err) }
     finally { setSending(false) }
   }
@@ -158,7 +161,7 @@ export default function Report({ apiUrl }) {
         </div>
 
         {/* Email Delivery */}
-        <div className="card mb-24">
+        <div className="card mb-24 no-print">
           <span className="mono mb-16" style={{ display: 'block' }}>SEND REPORT VIA EMAIL</span>
           {delivered ? (
             <div className="fade-in flex items-center gap-10">
@@ -182,8 +185,9 @@ export default function Report({ apiUrl }) {
         </div>
 
         {/* Actions */}
-        <div style={{ display: 'flex', gap: '12px' }}>
+        <div className="no-print" style={{ display: 'flex', gap: '12px' }}>
           <Link to="/verify" className="btn btn-primary">New verification</Link>
+          <button className="btn btn-secondary" onClick={() => window.print()}>Export PDF</button>
           <Link to="/invoice" className="btn btn-secondary">Create invoice</Link>
           <Link to="/dashboard" className="btn btn-secondary">Dashboard</Link>
         </div>

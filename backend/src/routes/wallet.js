@@ -20,14 +20,15 @@ router.get('/wallet/balance', async (req, res) => {
       });
     }
 
-    const data = await getBalance();
+    const locusRes = await getBalance();
+    const payload = locusRes.data || {};
     res.json({
-      balance: data.balance || '0.00',
+      balance: payload.promo_credit_balance || payload.usdc_balance || '0.00',
       currency: 'USDC',
-      walletAddress: data.walletAddress || 'Unknown',
-      network: 'Base',
+      walletAddress: payload.wallet_address || 'Unknown',
+      network: (payload.chain || 'Base').charAt(0).toUpperCase() + (payload.chain || 'Base').slice(1),
       mode: 'LIVE',
-      raw: data,
+      raw: locusRes,
     });
   } catch (error) {
     console.error('Balance error:', error);

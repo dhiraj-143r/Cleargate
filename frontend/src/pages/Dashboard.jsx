@@ -10,23 +10,43 @@ export default function Dashboard({ apiUrl }) {
   const [loading, setLoading] = useState(true)
   const [activeTab, setActiveTab] = useState('transactions')
 
+  // Editable spending controls state
+  const [editingControls, setEditingControls] = useState(false)
+  const [spendingLimits, setSpendingLimits] = useState({
+    maxReportCost: 2.00,
+    dailyBudget: 10.00,
+    promoLimit: 5.00
+  })
+
   useEffect(() => {
     async function load() {
       try {
-        const [bRes, tRes, rRes, iRes, aRes] = await Promise.all([
-          fetch(`${apiUrl}/api/wallet/balance`),
-          fetch(`${apiUrl}/api/transactions`),
-          fetch(`${apiUrl}/api/reports`).catch(() => ({ ok: false })),
-          fetch(`${apiUrl}/api/invoices`).catch(() => ({ ok: false })),
-          fetch(`${apiUrl}/api/audit-log`).catch(() => ({ ok: false })),
+        const [balRes, txRes, repRes, invRes, auditRes] = await Promise.all([
+          fetch(`${apiUrl}/wallet/balance`),
+          fetch(`${apiUrl}/transactions`),
+          fetch(`${apiUrl}/reports`),
+          fetch(`${apiUrl}/invoices`),
+          fetch(`${apiUrl}/audit-log`)
         ])
-        setBalance(await bRes.json())
-        const tData = await tRes.json()
-        setTransactions(tData.transactions || [])
-        if (rRes.ok) { const rData = await rRes.json(); setReports(rData.reports || []) }
-        if (iRes.ok) { const iData = await iRes.json(); setInvoices(iData.invoices || []) }
-        if (aRes.ok) { const aData = await aRes.json(); setAuditLog(aData.entries || []) }
-      } catch (err) { console.error(err) }
+        
+        if (balRes.ok) setBalance(await balRes.json())
+        if (txRes.ok) {
+          const t = await txRes.json()
+          setTransactions(t.transactions || [])
+        }
+        if (repRes.ok) {
+          const r = await repRes.json()
+          setReports(r.reports || [])
+        }
+        if (invRes.ok) {
+          const i = await invRes.json()
+          setInvoices(i.invoices || [])
+        }
+        if (auditRes.ok) {
+          const a = await auditRes.json()
+          setAuditLog(a.entries || [])
+        }
+      } catch (err) { console.error('Failed to load dashboard data:', err) }
       finally { setLoading(false) }
     }
     load()
@@ -55,8 +75,10 @@ export default function Dashboard({ apiUrl }) {
       <div className="container" style={{ maxWidth: '900px' }}>
         <span className="mono mb-16" style={{ display: 'block' }}>DASHBOARD</span>
         <h1 className="heading-lg mb-32">
-          Your <em>wallet.</em>
+          Your <em>dashboard.</em>
         </h1>
+
+
 
         {loading ? (
           <div className="grid-3">
@@ -95,27 +117,53 @@ export default function Dashboard({ apiUrl }) {
               </div>
             </div>
 
+
+
             {/* Spending Controls */}
-            <div className="card mb-24">
-              <span className="mono mb-16" style={{ display: 'block' }}>SPENDING CONTROLS</span>
+            <div className="card mb-24 relative">
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <span className="mono" style={{ display: 'block' }}>SPENDING CONTROLS</span>
+                <span 
+                  className="body-sm" 
+                  style={{ color: 'var(--accent)', cursor: 'pointer' }}
+                  onClick={() => setEditingControls(!editingControls)}
+                >
+                  {editingControls ? 'Save limits' : 'Edit limits ↗'}
+                </span>
+              </div>
               <div style={{
                 display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '1px',
                 background: 'var(--border)', borderRadius: 'var(--radius)', overflow: 'hidden', marginTop: '12px',
               }}>
                 {[
-                  { label: 'Last report cost', value: 'Max $2.00', used: lastReportCost, max: 2.00 },
-                  { label: 'Daily budget', value: '$10.00', used: totalSpent, max: 10.00 },
-                  { label: 'Promo limit', value: '$5.00', used: totalSpent, max: 5.00 },
+                  { id: 'maxReportCost', label: 'Last report cost', prefix: 'Max $', used: lastReportCost, max: spendingLimits.maxReportCost },
+                  { id: 'dailyBudget', label: 'Daily budget', prefix: '$', used: totalSpent, max: spendingLimits.dailyBudget },
+                  { id: 'promoLimit', label: 'Promo limit', prefix: '$', used: totalSpent, max: spendingLimits.promoLimit },
                 ].map((c, i) => (
                   <div key={i} style={{ background: 'var(--bg)', padding: '16px' }}>
                     <div className="body-sm" style={{ color: 'var(--text-muted)' }}>{c.label}</div>
-                    <div className="heading-md mt-4">{c.value}</div>
+                    
+                    {editingControls ? (
+                      <div className="mt-4" style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        <span className="heading-md">{c.prefix}</span>
+                        <input 
+                          type="number" 
+                          className="input" 
+                          style={{ padding: '4px 8px', fontSize: '1rem', width: '80px', marginTop: '0' }}
+                          value={c.max}
+                          onChange={(e) => setSpendingLimits({...spendingLimits, [c.id]: parseFloat(e.target.value) || 0})}
+                        />
+                      </div>
+                    ) : (
+                      <div className="heading-md mt-4">{c.prefix}{c.max.toFixed(2)}</div>
+                    )}
+                    
                     <div style={{
                       height: '3px', borderRadius: '2px', background: 'var(--border)',
                       marginTop: '10px', overflow: 'hidden',
                     }}>
                       <div style={{
-                        height: '100%', width: `${Math.min((c.used / c.max) * 100, 100)}%`,
+                        height: '100%', width: `${Math.min((c.used / Math.max(c.max, 0.01)) * 100, 100)}%`,
                         background: 'var(--accent)', borderRadius: '2px',
                         transition: 'width 0.6s ease',
                       }} />
@@ -161,9 +209,7 @@ export default function Dashboard({ apiUrl }) {
                         padding: '14px 0', borderBottom: '1px solid var(--border)',
                       }}>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                          <span style={{ fontSize: '1.125rem' }}>
-                            {tx.type === 'VERIFICATION' ? '🔍' : tx.type === 'REFUND' ? '↩️' : '💰'}
-                          </span>
+
                           <div>
                             <div className="body" style={{ color: 'var(--text)', fontWeight: '500' }}>{tx.target}</div>
                             <div className="body-sm">{new Date(tx.timestamp).toLocaleString()}</div>
@@ -249,7 +295,11 @@ export default function Dashboard({ apiUrl }) {
                           <span style={{
                             fontFamily: "'SF Mono', monospace", fontSize: '0.8125rem', color: 'var(--text)',
                           }}>
-                            ${inv.totalUsdc} USDC
+                            ${inv.total || inv.totalUsdc || 0} USDC
+                          </span>
+                          <span className="body-sm" style={{ color: 'var(--accent)', cursor: 'pointer', marginLeft: '8px' }} 
+                                onClick={() => window.location.href = `/invoice?company=${encodeURIComponent(inv.to?.name)}&amount=${inv.total || inv.totalUsdc || 0}`}>
+                            View ↗
                           </span>
                         </div>
                       </div>

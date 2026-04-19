@@ -15,7 +15,7 @@ export default function Checkout({ apiUrl }) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(`${apiUrl}/api/checkout/status/${sessionId}`)
+        const res = await fetch(`${apiUrl}/checkout/status/${sessionId}`)
         if (!res.ok) throw new Error('Session not found')
         setSession(await res.json())
       } catch (err) { setError(err.message) }
@@ -30,7 +30,7 @@ export default function Checkout({ apiUrl }) {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/checkout/status/${sessionId}`)
+        const res = await fetch(`${apiUrl}/checkout/status/${sessionId}`)
         const data = await res.json()
         if (data.status === 'PAID') {
           setSession(data)
@@ -46,7 +46,7 @@ export default function Checkout({ apiUrl }) {
   const simulatePayment = async () => {
     setPaying(true)
     try {
-      const res = await fetch(`${apiUrl}/api/checkout/simulate-payment`, {
+      const res = await fetch(`${apiUrl}/checkout/simulate-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sessionId }),
@@ -87,18 +87,52 @@ export default function Checkout({ apiUrl }) {
           /* ── Payment Success ── */
           <div className="fade-in">
             <div className="card" style={{ textAlign: 'center', borderColor: 'var(--accent-border)' }}>
-              <div style={{
-                width: '64px', height: '64px', borderRadius: '50%',
-                background: 'var(--accent-dim)', display: 'flex',
-                alignItems: 'center', justifyContent: 'center',
-                margin: '0 auto 20px', fontSize: '1.75rem',
-              }}>
-                ✓
+              <style>{`
+                @keyframes locus-pulse {
+                  0% { box-shadow: 0 0 0 0 rgba(110, 86, 207, 0.4); }
+                  70% { box-shadow: 0 0 0 20px rgba(110, 86, 207, 0); }
+                  100% { box-shadow: 0 0 0 0 rgba(110, 86, 207, 0); }
+                }
+                @keyframes locus-spin {
+                  from { transform: rotate(0deg); }
+                  to { transform: rotate(360deg); }
+                }
+                .locus-success-icon {
+                  width: 80px;
+                  height: 80px;
+                  background: linear-gradient(135deg, rgba(110, 86, 207, 0.2), rgba(110, 86, 207, 0.05));
+                  border: 2px solid rgba(110, 86, 207, 0.5);
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  margin: 0 auto 20px;
+                  position: relative;
+                  animation: locus-pulse 2s infinite;
+                }
+                .locus-success-icon::before {
+                  content: '';
+                  position: absolute;
+                  inset: -6px;
+                  border: 2px dashed rgba(110, 86, 207, 0.3);
+                  border-radius: 50%;
+                  animation: locus-spin 10s linear infinite;
+                }
+                .locus-check {
+                  color: var(--accent);
+                  font-size: 2.5rem;
+                  text-shadow: 0 0 10px rgba(110, 86, 207, 0.5);
+                }
+              `}</style>
+
+              <div className="locus-success-icon">
+                <span className="locus-check">✓</span>
               </div>
 
+              <div className="mono mb-8" style={{ color: 'var(--accent)', letterSpacing: '0.05em' }}>SETTLED VIA LOCUS</div>
               <h2 className="heading-lg mb-8">Payment confirmed</h2>
               <p className="body mb-24">
-                ${session.amount} USDC settled on Base. Instant and verifiable.
+                ${session.amount} USDC settled on Base — instant and verifiable.
               </p>
 
               {/* Transaction details */}
@@ -150,7 +184,7 @@ export default function Checkout({ apiUrl }) {
               Complete <em>payment.</em>
             </h1>
             <p className="body-lg mb-32">
-              Settle with USDC on Base with zero wire fees, instant confirmation.
+              Settle with USDC on Base — zero wire fees, instant confirmation.
             </p>
 
             {/* Order Summary */}

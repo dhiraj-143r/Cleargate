@@ -2,7 +2,7 @@ import { Link } from 'react-router-dom'
 
 export default function Footer() {
   return (
-    <footer style={{
+    <footer className="no-print" style={{
       borderTop: '1px solid var(--border)',
       padding: '48px 0 32px',
       marginTop: '60px',
@@ -37,6 +37,7 @@ export default function Footer() {
               <Link to="/verify" className="body-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Verify</Link>
               <Link to="/invoice" className="body-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Invoice</Link>
               <Link to="/dashboard" className="body-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Dashboard</Link>
+              <Link to="/audit" className="body-sm" style={{ color: 'var(--text-muted)', textDecoration: 'none' }}>Live Audit Log</Link>
             </div>
           </div>
 

@@ -5,7 +5,7 @@ export default function Navbar() {
   const isActive = (path) => location.pathname === path
 
   return (
-    <nav style={{
+    <nav className="no-print" style={{
       position: 'sticky',
       top: 0,
       zIndex: 100,
@@ -35,6 +35,7 @@ export default function Navbar() {
         <div style={{ display: 'flex', alignItems: 'center', gap: '32px' }}>
           {[
             { path: '/verify', label: 'Verify' },
+            { path: '/batch', label: 'Batch' },
             { path: '/invoice', label: 'Invoice' },
             { path: '/dashboard', label: 'Dashboard' },
           ].map(({ path, label }) => (

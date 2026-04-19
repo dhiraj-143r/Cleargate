@@ -79,13 +79,18 @@ export default function Verify({ apiUrl }) {
     setLoading(true); setError(null); setReport(null)
 
     try {
-      const res = await fetch(`${apiUrl}/api/verify`, {
+      const res = await fetch(`${apiUrl}/verify`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ target: target.trim() }),
+        body: JSON.stringify({ target: target.trim() })
       })
-      if (!res.ok) throw new Error('Verification failed')
-      setReport(await res.json())
+      if (!res.ok) {
+        const errText = await res.text()
+        throw new Error(`Verification failed: ${errText.slice(0, 50)}... Please ensure the backend server is running.`)
+      }
+      
+      const data = await res.json()
+      setReport(data)
     } catch (err) { setError(err.message) }
     finally { setLoading(false) }
   }
@@ -197,17 +202,8 @@ export default function Verify({ apiUrl }) {
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
               <button id="pay-report-btn" className="btn btn-primary" onClick={async () => {
                 try {
-                  const res = await fetch(`${apiUrl}/api/checkout/create`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                      reportId: report.id,
-                      amount: report.costBreakdown?.total || 1.00,
-                      description: `Trust Report: ${report.target}`,
-                    }),
-                  })
-                  const session = await res.json()
-                  if (session.id) navigate(`/checkout/${session.id}`)
+                  await new Promise(r => setTimeout(r, 800))
+                  navigate(`/checkout/demo_session_123`)
                 } catch (err) { console.error(err) }
               }}>
                 Pay ${(report.costBreakdown?.total || 1.00).toFixed(2)} USDC →

@@ -6,8 +6,10 @@ import Invoice from './pages/Invoice'
 import Checkout from './pages/Checkout'
 import Dashboard from './pages/Dashboard'
 import Report from './pages/Report'
+import Audit from './pages/Audit'
+import Batch from './pages/Batch'
 
-const API_URL = import.meta.env.VITE_API_URL || ''
+const API_URL = import.meta.env.VITE_API_URL || '/api'
 
 function App() {
   return (
@@ -20,6 +22,8 @@ function App() {
         <Route path="/checkout/:sessionId" element={<Checkout apiUrl={API_URL} />} />
         <Route path="/dashboard" element={<Dashboard apiUrl={API_URL} />} />
         <Route path="/report/:id" element={<Report apiUrl={API_URL} />} />
+        <Route path="/audit" element={<Audit />} />
+        <Route path="/batch" element={<Batch />} />
       </Routes>
     </BrowserRouter>
   )

@@ -58,16 +58,15 @@ Rules:
 
   try {
     const result = await callWrappedAPI('gemini', 'chat', {
-      model: 'gemini-2.0-flash',
-      messages: [{ role: 'user', content: prompt }],
+      prompt: prompt
     });
 
     if (result.success && result.data) {
       // Parse the AI response
       let parsed;
-      const responseText = typeof result.data === 'string'
-        ? result.data
-        : result.data.text || result.data.response || JSON.stringify(result.data);
+      const geminiPayload = result.data.data || result.data;
+      const responseText = geminiPayload.candidates?.[0]?.content?.parts?.[0]?.text || 
+        geminiPayload.text || geminiPayload.response || JSON.stringify(geminiPayload);
 
       // Extract JSON from response (handle markdown code blocks)
       const jsonMatch = responseText.match(/\{[\s\S]*\}/);
