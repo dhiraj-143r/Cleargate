@@ -12,7 +12,7 @@ export default function Report({ apiUrl }) {
   const [delivered, setDelivered] = useState(null)
 
   useEffect(() => {
-    window.scrollTo(0, 0);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
     async function load() {
       try {
         const res = await fetch(`${apiUrl}/reports/${id}`)
@@ -66,7 +66,7 @@ export default function Report({ apiUrl }) {
   const safe = (s) => ['CLEAR', 'VERIFIED', 'CLEAN', 'SAFE', 'LEGITIMATE'].includes(s)
 
   return (
-    <div className="page">
+    <div className="page animate-fade-up">
       <div className="container" style={{ maxWidth: '860px' }}>
         <span className="mono mb-16" style={{ display: 'block' }}>TRUST REPORT</span>
 
