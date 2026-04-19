@@ -3,15 +3,18 @@ FROM node:20-alpine
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --only=production
+RUN npm install --production
 
 COPY . .
 
-RUN apk add --no-cache wget
+# Production environment
+ENV NODE_ENV=production
+ENV PORT=8080
+ENV LOCUS_API_KEY=claw_dev_6wAoFBYCsFPU4seJxjgp8Eh9Nx9JYcXU
+ENV LOCUS_API_BASE=https://beta-api.paywithlocus.com
+ENV USE_DUMMY=false
+ENV FRONTEND_URL=*
 
 EXPOSE 8080
-
-ENV PORT=8080
-ENV NODE_ENV=production
 
 CMD ["node", "server.js"]
