@@ -52,6 +52,10 @@ export default function Checkout({ apiUrl }) {
         body: JSON.stringify({ sessionId }),
       })
       const data = await res.json()
+      
+      // Artificial delay to simulate blockchain confirmation for the demo
+      await new Promise(resolve => setTimeout(resolve, 2500));
+      
       setSession(data)
     } catch (err) { setError(err.message) }
     finally { setPaying(false) }
