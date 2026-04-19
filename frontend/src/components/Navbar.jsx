@@ -48,6 +48,7 @@ export default function Navbar() {
                 color: isActive(path) ? 'var(--text)' : 'var(--text-muted)',
                 transition: 'color 150ms ease',
               }}
+            >
               {label}
             </Link>
           ))}
