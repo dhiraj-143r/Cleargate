@@ -123,15 +123,15 @@ export default function Checkout({ apiUrl }) {
                   animation: locus-spin 10s linear infinite;
                 }
                 @keyframes drawCheck {
-                  0% { stroke-dashoffset: 50; opacity: 0; }
-                  10% { opacity: 1; }
-                  100% { stroke-dashoffset: 0; opacity: 1; }
+                  0% { stroke-dashoffset: 50; opacity: 0; transform: translateY(15px) scale(0.9); }
+                  30% { opacity: 1; }
+                  100% { stroke-dashoffset: 0; opacity: 1; transform: translateY(0) scale(1); }
                 }
                 .locus-check-svg {
                   stroke-dasharray: 50;
                   stroke-dashoffset: 50;
-                  animation: drawCheck 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
-                  animation-delay: 0.1s; /* Slight delay after screen loads */
+                  animation: drawCheck 1.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+                  animation-delay: 0.1s;
                   width: 32px;
                   height: 32px;
                   color: var(--accent);
