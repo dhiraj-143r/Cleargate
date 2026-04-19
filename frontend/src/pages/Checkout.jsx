@@ -122,15 +122,27 @@ export default function Checkout({ apiUrl }) {
                   border-radius: 50%;
                   animation: locus-spin 10s linear infinite;
                 }
-                .locus-check {
+                @keyframes drawCheck {
+                  0% { stroke-dashoffset: 50; opacity: 0; }
+                  10% { opacity: 1; }
+                  100% { stroke-dashoffset: 0; opacity: 1; }
+                }
+                .locus-check-svg {
+                  stroke-dasharray: 50;
+                  stroke-dashoffset: 50;
+                  animation: drawCheck 0.6s cubic-bezier(0.65, 0, 0.45, 1) forwards;
+                  animation-delay: 0.1s; /* Slight delay after screen loads */
+                  width: 32px;
+                  height: 32px;
                   color: var(--accent);
-                  font-size: 2.5rem;
-                  text-shadow: 0 0 10px rgba(110, 86, 207, 0.5);
+                  filter: drop-shadow(0 0 8px rgba(110, 86, 207, 0.6));
                 }
               `}</style>
 
               <div className="locus-success-icon">
-                <span className="locus-check">✓</span>
+                <svg className="locus-check-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12"></polyline>
+                </svg>
               </div>
 
               <div className="mono mb-8" style={{ color: 'var(--accent)', letterSpacing: '0.05em' }}>SETTLED VIA LOCUS</div>
