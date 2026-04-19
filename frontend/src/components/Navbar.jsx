@@ -48,10 +48,26 @@ export default function Navbar() {
                 color: isActive(path) ? 'var(--text)' : 'var(--text-muted)',
                 transition: 'color 150ms ease',
               }}
-            >
               {label}
             </Link>
           ))}
+          <Link
+            to="/enterprise"
+            style={{
+              fontSize: '0.875rem',
+              fontWeight: '500',
+              color: '#000000',
+              backgroundColor: '#a39af5',
+              padding: '6px 16px',
+              borderRadius: '8px',
+              textDecoration: 'none',
+              transition: 'opacity 150ms ease',
+            }}
+            onMouseOver={(e) => e.target.style.opacity = '0.9'}
+            onMouseOut={(e) => e.target.style.opacity = '1'}
+          >
+            Enterprise
+          </Link>
         </div>
 
         {/* CTA */}

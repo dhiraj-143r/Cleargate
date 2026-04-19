@@ -8,6 +8,7 @@ import Dashboard from './pages/Dashboard'
 import Report from './pages/Report'
 import Audit from './pages/Audit'
 import Batch from './pages/Batch'
+import Enterprise from './pages/Enterprise'
 
 const API_URL = import.meta.env.VITE_API_URL || '/api'
 
@@ -24,6 +25,7 @@ function App() {
         <Route path="/report/:id" element={<Report apiUrl={API_URL} />} />
         <Route path="/audit" element={<Audit />} />
         <Route path="/batch" element={<Batch />} />
+        <Route path="/enterprise" element={<Enterprise apiUrl={API_URL} />} />
       </Routes>
     </BrowserRouter>
   )
