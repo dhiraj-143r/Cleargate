@@ -71,13 +71,51 @@ export default function Enterprise({ apiUrl }) {
           )}
 
           {result && (
-            <div style={{ marginTop: '16px', padding: '16px', background: 'rgba(57, 255, 20, 0.1)', borderRadius: 'var(--radius)', border: '1px solid var(--green)' }}>
-              <p className="body-sm" style={{ color: 'var(--green)', fontWeight: 500, marginBottom: '8px' }}>✅ Infrastructure Provisioned Successfully!</p>
-              <p className="body-sm">The new ClearGate instance is building on Locus. It will be live in 2-5 minutes.</p>
-              <div style={{ marginTop: '12px', fontFamily: "'SF Mono', monospace", fontSize: '0.8125rem' }}>
-                <div><span style={{ color: 'var(--text-muted)' }}>Project ID:</span> {result.project?.id || 'Unknown'}</div>
-                <div style={{ marginTop: '4px' }}><span style={{ color: 'var(--text-muted)' }}>Web URL:</span> <a href={result.urls?.web} target="_blank" style={{ color: 'var(--accent)' }}>{result.urls?.web}</a></div>
-                <div style={{ marginTop: '4px' }}><span style={{ color: 'var(--text-muted)' }}>API URL:</span> <span style={{ color: 'var(--text)' }}>{result.urls?.api}</span></div>
+            <div style={{ 
+              marginTop: '16px', 
+              padding: '20px', 
+              background: '#181A1B', 
+              borderRadius: '12px', 
+              border: '1px solid #2B2D31',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '12px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <div style={{ width: '22px', height: '22px', borderRadius: '50%', background: '#34A853', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#ffffff" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                </div>
+                <p style={{ color: '#E8EAED', fontWeight: 500, fontSize: '0.95rem', margin: 0 }}>Provisioning Successful</p>
+              </div>
+              
+              <p style={{ color: '#9AA0A6', fontSize: '0.85rem', margin: 0, lineHeight: 1.4 }}>
+                The new ClearGate instance is building on Locus. It will be live in 2-5 minutes.
+              </p>
+
+              <div style={{ 
+                marginTop: '4px', 
+                background: '#0D0E0F', 
+                padding: '16px', 
+                borderRadius: '8px', 
+                border: '1px solid #202225',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '12px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#9AA0A6', fontSize: '0.8rem', fontWeight: 500 }}>Project ID</span>
+                  <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '0.8rem', color: '#E8EAED' }}>{result.project?.id || 'Unknown'}</span>
+                </div>
+                <div style={{ height: '1px', background: '#202225', width: '100%' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#9AA0A6', fontSize: '0.8rem', fontWeight: 500 }}>Web URL</span>
+                  <a href={result.urls?.web} target="_blank" style={{ fontFamily: "'SF Mono', monospace", fontSize: '0.8rem', color: '#8AB4F8', textDecoration: 'none' }}>{result.urls?.web}</a>
+                </div>
+                <div style={{ height: '1px', background: '#202225', width: '100%' }}></div>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ color: '#9AA0A6', fontSize: '0.8rem', fontWeight: 500 }}>API URL</span>
+                  <span style={{ fontFamily: "'SF Mono', monospace", fontSize: '0.8rem', color: '#E8EAED' }}>{result.urls?.api}</span>
+                </div>
               </div>
             </div>
           )}
