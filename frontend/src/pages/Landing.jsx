@@ -123,7 +123,7 @@ const FadeInSection = ({ children }) => {
       ref={domRef}
       style={{
         opacity: isVisible ? 1 : 0,
-        transform: isVisible ? 'translateY(0)' : 'translateY(40px)',
+        transform: isVisible ? 'translateX(0)' : 'translateX(-60px)',
         transition: 'opacity 0.8s cubic-bezier(0.22, 1, 0.36, 1), transform 0.8s cubic-bezier(0.22, 1, 0.36, 1)',
         willChange: 'opacity, transform'
       }}
