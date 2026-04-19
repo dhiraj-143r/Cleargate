@@ -216,9 +216,9 @@ router.post('/verify', async (req, res) => {
 
       const apiCalls = [
         { key: 'braveCombined', provider: 'brave', endpoint: 'web-search', call: callWrappedAPI('brave', 'web-search', { q: combinedQuery }) },
-        { key: 'hunter', provider: 'hunter (cached)', endpoint: 'email-verifier', call: Promise.resolve({ success: true, data: { data: { status: 'valid', score: 95 } }, duration: 400 }) },
-        { key: 'virustotal', provider: 'virustotal (cached)', endpoint: 'domain-report', call: Promise.resolve({ success: true, data: { data: { attributes: { last_analysis_stats: { malicious: 0, undetected: 70, harmless: 0, suspicious: 0 } } } }, duration: 600 }) },
-        { key: 'websiteAnalysis', provider: 'firecrawl (cached)', endpoint: 'scrape', call: Promise.resolve({ success: true, data: { data: { markdown: 'Contact us for privacy info. We are legitimate.', metadata: { title: domain } } }, duration: 1200 }) },
+        { key: 'hunter', provider: 'hunter', endpoint: 'email-verifier', call: callWrappedAPI('hunter', 'email-verifier', { email: email }) },
+        { key: 'virustotal', provider: 'virustotal', endpoint: 'domain-report', call: callWrappedAPI('virustotal', 'domain-report', { domain: domain }) },
+        { key: 'websiteAnalysis', provider: 'firecrawl', endpoint: 'scrape', call: callWrappedAPI('firecrawl', 'scrape', { url: `https://${domain}` }) },
       ];
 
       const results = await Promise.allSettled(apiCalls.map(a => a.call));
