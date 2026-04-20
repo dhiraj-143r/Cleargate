@@ -10,7 +10,7 @@ import Audit from './pages/Audit'
 import Batch from './pages/Batch'
 import Enterprise from './pages/Enterprise'
 
-const BACKEND_URL = import.meta.env.VITE_API_URL
+const BACKEND_URL = import.meta.env.VITE_API_URL || 'https://svc-mo47l6ryjh61wjpz.buildwithlocus.com'
 const API_URL = BACKEND_URL ? `${BACKEND_URL.replace(/\/$/, '')}/api` : '/api'
 
 function App() {
