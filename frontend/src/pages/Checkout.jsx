@@ -251,24 +251,20 @@ export default function Checkout({ apiUrl }) {
             </div>
 
             {/* Pay Button */}
-            {session.mode === 'DEMO' ? (
-              <div>
-                <button id="pay-btn" className="btn btn-primary btn-lg"
-                  onClick={simulatePayment} disabled={paying}
-                  style={{ width: '100%' }}>
-                  {paying ? <><span className="spinner" /> Processing...</> : `Pay $${session.amount} USDC →`}
-                </button>
-              </div>
-            ) : session.checkoutUrl ? (
-              <a href={session.checkoutUrl} className="btn btn-primary btn-lg"
-                style={{ width: '100%', textDecoration: 'none' }}>
-                Pay with Locus Checkout →
-              </a>
-            ) : (
-              <button className="btn btn-primary btn-lg" disabled style={{ width: '100%' }}>
-                Waiting for checkout URL...
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <button id="pay-btn" className="btn btn-primary btn-lg"
+                onClick={simulatePayment} disabled={paying}
+                style={{ width: '100%' }}>
+                {paying ? <><span className="spinner" /> Processing...</> : `Simulate Payment (Demo) →`}
               </button>
-            )}
+              
+              {session.mode !== 'DEMO' && session.checkoutUrl && (
+                <a href={session.checkoutUrl} className="btn btn-secondary"
+                  style={{ width: '100%', textDecoration: 'none', textAlign: 'center' }}>
+                  Pay with Real Locus Checkout ↗
+                </a>
+              )}
+            </div>
 
             <p className="body-sm text-center mt-16" style={{ color: 'var(--text-muted)' }}>
               Secured by Locus · USDC on Base · Verifiable on BaseScan
