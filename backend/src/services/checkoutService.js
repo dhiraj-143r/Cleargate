@@ -26,46 +26,10 @@ async function createCheckoutSession({
   lineItems = [],
   metadata = {},
 }) {
-  if (USE_DUMMY) {
-    return createDummySession({ amount, title, description, lineItems, metadata });
-  }
+  // Always use dummy session for the hackathon demo since the Locus checkout creation API is unavailable
+  return createDummySession({ amount, title, description, lineItems, metadata });
 
-  const res = await fetch(`${LOCUS_API_BASE}/api/checkout/session`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'x-api-key': API_KEY,
-    },
-    body: JSON.stringify({
-      name: title,
-      description,
-      amount: parseFloat(amount),
-      currency: 'USDC',
-      successUrl: successUrl || undefined,
-      cancelUrl: cancelUrl || undefined,
-      lineItems: lineItems.length > 0 ? lineItems : [
-        { name: title, amount: parseFloat(amount), quantity: 1 },
-      ],
-      metadata,
-    }),
-  });
 
-  if (!res.ok) {
-    const err = await res.text();
-    throw new Error(`Checkout session creation failed: ${res.status} – ${err}`);
-  }
-
-  const data = await res.json();
-
-  return {
-    sessionId: data.id || data.sessionId,
-    checkoutUrl: data.url || data.checkoutUrl,
-    status: data.status || 'PENDING',
-    amount: parseFloat(amount),
-    expiresAt: data.expiresAt || new Date(Date.now() + 30 * 60 * 1000).toISOString(),
-    raw: data,
-    mode: 'LIVE',
-  };
 }
 
 /**
