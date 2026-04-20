@@ -23,7 +23,7 @@ export default function Checkout({ apiUrl }) {
       const data = await res.json()
       
       // Artificial delay to simulate blockchain confirmation for the demo
-      await new Promise(resolve => setTimeout(resolve, 2500));
+      await new Promise(resolve => setTimeout(resolve, 4000));
       
       setSession(data)
     } catch (err) { setError(err.message) }
