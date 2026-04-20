@@ -43,6 +43,7 @@ export default function Checkout({ apiUrl }) {
         if (data.status !== 'PAID') {
           simulatePayment(data.id || sessionId)
         }
+        setLoading(false)
       } catch (err) { 
         setError(err.message) 
         setLoading(false)
