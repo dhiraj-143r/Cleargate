@@ -215,8 +215,7 @@ router.post('/verify', async (req, res) => {
       const combinedQuery = `${entityName} ${domain} scam fraud sanctions headquarters`;
 
       const apiCalls = [
-        // Strictly mock the paid 'brave' call to ensure 0 credit usage
-        { key: 'braveCombined', provider: 'brave', endpoint: 'web-search', call: Promise.resolve({ success: true, data: { web: { results: [{ title: 'Mock Result', description: 'No sanctions found.' }] } }, status: 'fulfilled' }) },
+        { key: 'braveCombined', provider: 'brave', endpoint: 'web-search', call: callWrappedAPI('brave', 'web-search', { q: combinedQuery }) },
         { key: 'hunter', provider: 'hunter', endpoint: 'email-verifier', call: callWrappedAPI('hunter', 'email-verifier', { email: email }) },
         { key: 'virustotal', provider: 'virustotal', endpoint: 'domain-report', call: callWrappedAPI('virustotal', 'domain-report', { domain: domain }) },
         { key: 'websiteAnalysis', provider: 'firecrawl', endpoint: 'scrape', call: callWrappedAPI('firecrawl', 'scrape', { url: `https://${domain}` }) },

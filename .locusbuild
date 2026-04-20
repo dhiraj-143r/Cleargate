@@ -4,8 +4,15 @@
       "path": "backend",
       "port": 8080,
       "healthCheck": "/api/health",
+      "buildConfig": {
+        "method": "dockerfile",
+        "dockerfile": "Dockerfile"
+      },
       "env": {
         "NODE_ENV": "production",
+        "USE_DUMMY": "false",
+        "LOCUS_API_KEY": "claw_dev__arYRvVUbtZ68kKVvGUyAlF68BDTngc3",
+        "LOCUS_API_BASE": "https://beta-api.paywithlocus.com",
         "FRONTEND_URL": "${{web.URL}}"
       }
     },
@@ -13,6 +20,13 @@
       "path": "frontend",
       "port": 8080,
       "healthCheck": "/",
+      "buildConfig": {
+        "method": "dockerfile",
+        "dockerfile": "Dockerfile",
+        "buildArgs": {
+          "VITE_API_URL": "${{api.URL}}"
+        }
+      },
       "env": {
         "VITE_API_URL": "${{api.URL}}"
       }
