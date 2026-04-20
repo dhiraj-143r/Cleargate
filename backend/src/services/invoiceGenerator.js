@@ -58,7 +58,8 @@ Rules:
 
   try {
     const result = await callWrappedAPI('gemini', 'chat', {
-      prompt: prompt
+      model: 'gemini-2.5-flash',
+      messages: [{ role: 'user', content: prompt }],
     });
 
     if (result.success && result.data) {

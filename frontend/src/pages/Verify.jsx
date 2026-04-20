@@ -202,8 +202,18 @@ export default function Verify({ apiUrl }) {
             <div style={{ display: 'flex', gap: '12px', marginTop: '24px' }}>
               <button id="pay-report-btn" className="btn btn-primary" onClick={async () => {
                 try {
-                  await new Promise(r => setTimeout(r, 800))
-                  navigate(`/checkout/demo_session_123`)
+                  const payRes = await fetch(`${apiUrl}/checkout/create`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      reportId: report.id,
+                      amount: report.costBreakdown?.total || 1.00,
+                      title: `Trust Report: ${report.target}`,
+                    })
+                  })
+                  if (!payRes.ok) throw new Error('Checkout creation failed')
+                  const session = await payRes.json()
+                  navigate(`/checkout/${session.id}`)
                 } catch (err) { console.error(err) }
               }}>
                 Pay ${(report.costBreakdown?.total || 1.00).toFixed(2)} USDC →

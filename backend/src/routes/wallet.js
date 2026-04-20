@@ -21,11 +21,12 @@ router.get('/wallet/balance', async (req, res) => {
     }
 
     const locusRes = await getBalance();
-    const payload = locusRes.data || {};
+    const payload = locusRes.data || locusRes || {};
     res.json({
-      balance: payload.promo_credit_balance || payload.usdc_balance || '0.00',
+      balance: payload.promo_credit_balance || payload.usdc_balance || payload.balance || '0.00',
+      promo_credit_balance: payload.promo_credit_balance || null,
       currency: 'USDC',
-      walletAddress: payload.wallet_address || 'Unknown',
+      walletAddress: payload.wallet_address || payload.walletAddress || 'Unknown',
       network: (payload.chain || 'Base').charAt(0).toUpperCase() + (payload.chain || 'Base').slice(1),
       mode: 'LIVE',
       raw: locusRes,
