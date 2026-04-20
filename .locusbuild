@@ -24,7 +24,7 @@
         "method": "dockerfile",
         "dockerfile": "Dockerfile",
         "buildArgs": {
-          "VITE_API_URL": "${{api.URL}}"
+          "VITE_API_URL": "https://svc-mo47l6ryjh61wjpz.buildwithlocus.com"
         }
       },
       "env": {
