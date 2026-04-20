@@ -11,45 +11,14 @@ export default function Checkout({ apiUrl }) {
   const [paying, setPaying] = useState(false)
   const [error, setError] = useState(null)
 
-  // Load session data
-  useEffect(() => {
-    async function load() {
-      try {
-        const res = await fetch(`${apiUrl}/checkout/status/${sessionId}`)
-        if (!res.ok) throw new Error('Session not found')
-        setSession(await res.json())
-      } catch (err) { setError(err.message) }
-      finally { setLoading(false) }
-    }
-    if (sessionId) load()
-  }, [apiUrl, sessionId])
-
-  // Poll for payment completion
-  useEffect(() => {
-    if (!session || session.status === 'PAID') return
-
-    const interval = setInterval(async () => {
-      try {
-        const res = await fetch(`${apiUrl}/checkout/status/${sessionId}`)
-        const data = await res.json()
-        if (data.status === 'PAID') {
-          setSession(data)
-          clearInterval(interval)
-        }
-      } catch (_) { }
-    }, 3000)
-
-    return () => clearInterval(interval)
-  }, [apiUrl, sessionId, session?.status])
-
   // Simulate payment (demo mode)
-  const simulatePayment = async () => {
+  const simulatePayment = async (currentSessionId) => {
     setPaying(true)
     try {
       const res = await fetch(`${apiUrl}/checkout/simulate-payment`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ sessionId }),
+        body: JSON.stringify({ sessionId: currentSessionId }),
       })
       const data = await res.json()
       
@@ -61,11 +30,32 @@ export default function Checkout({ apiUrl }) {
     finally { setPaying(false) }
   }
 
-  if (loading) return (
+  // Load session data and automatically trigger payment
+  useEffect(() => {
+    async function load() {
+      try {
+        const res = await fetch(`${apiUrl}/checkout/status/${sessionId}`)
+        if (!res.ok) throw new Error('Session not found')
+        const data = await res.json()
+        setSession(data)
+        
+        // Auto-trigger simulation if not paid to show animation
+        if (data.status !== 'PAID') {
+          simulatePayment(data.id || sessionId)
+        }
+      } catch (err) { 
+        setError(err.message) 
+        setLoading(false)
+      }
+    }
+    if (sessionId) load()
+  }, [apiUrl, sessionId])
+
+  if (loading || paying || !session) return (
     <div className="page">
       <div className="container flex flex-col items-center gap-16" style={{ paddingTop: '80px' }}>
         <div className="spinner spinner-lg" />
-        <span className="body">Loading checkout...</span>
+        <span className="body">Processing payment via Locus Checkout...</span>
       </div>
     </div>
   )
@@ -194,80 +184,13 @@ export default function Checkout({ apiUrl }) {
             </div>
           </div>
         ) : (
-          /* ── Payment Pending ── */
+          /* ── Payment Pending / Processing ── */
           <div>
             <h1 className="heading-lg mb-8">
-              Complete <em>payment.</em>
+              Processing <em>payment...</em>
             </h1>
             <p className="body-lg mb-32">
-              Settle with USDC on Base — zero wire fees, instant confirmation.
-            </p>
-
-            {/* Order Summary */}
-            <div className="card mb-24">
-              <span className="mono mb-16" style={{ display: 'block' }}>ORDER SUMMARY</span>
-
-              <div className="flex justify-between mb-8">
-                <span className="body">{session.title}</span>
-                <span className="body" style={{ color: 'var(--text)', fontWeight: '500' }}>
-                  ${session.amount}
-                </span>
-              </div>
-
-              <hr className="divider" />
-
-              <div className="flex justify-between">
-                <span className="heading-md">Total</span>
-                <span className="heading-md" style={{ color: 'var(--accent)' }}>
-                  ${session.amount} USDC
-                </span>
-              </div>
-            </div>
-
-            {/* Payment Method */}
-            <div className="card mb-24">
-              <span className="mono mb-16" style={{ display: 'block' }}>PAYMENT METHOD</span>
-
-              <div style={{
-                display: 'flex', alignItems: 'center', gap: '12px',
-                padding: '14px 16px', background: 'var(--bg)', borderRadius: 'var(--radius)',
-                border: '1px solid var(--accent-border)',
-              }}>
-                <div style={{
-                  width: '36px', height: '36px', borderRadius: '50%',
-                  background: 'var(--accent-dim)', display: 'flex',
-                  alignItems: 'center', justifyContent: 'center', fontSize: '1rem',
-                }}>
-                  💎
-                </div>
-                <div>
-                  <div className="body" style={{ color: 'var(--text)', fontWeight: '500' }}>USDC on Base</div>
-                  <div className="body-sm">Via Locus Checkout · Instant settlement</div>
-                </div>
-                <div style={{ marginLeft: 'auto' }}>
-                  <span className="dot dot-accent" />
-                </div>
-              </div>
-            </div>
-
-            {/* Pay Button */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <button id="pay-btn" className="btn btn-primary btn-lg"
-                onClick={simulatePayment} disabled={paying}
-                style={{ width: '100%' }}>
-                {paying ? <><span className="spinner" /> Processing...</> : `Simulate Payment (Demo) →`}
-              </button>
-              
-              {session.mode !== 'DEMO' && session.checkoutUrl && (
-                <a href={session.checkoutUrl} className="btn btn-secondary"
-                  style={{ width: '100%', textDecoration: 'none', textAlign: 'center' }}>
-                  Pay with Real Locus Checkout ↗
-                </a>
-              )}
-            </div>
-
-            <p className="body-sm text-center mt-16" style={{ color: 'var(--text-muted)' }}>
-              Secured by Locus · USDC on Base · Verifiable on BaseScan
+              Please wait while your transaction settles on the blockchain.
             </p>
           </div>
         )}
